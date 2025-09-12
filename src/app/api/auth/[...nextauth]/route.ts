@@ -47,14 +47,9 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   secret: process.env.NEXTAUTH_SECRET,
-  // Add pages configuration to handle redirects properly
-  pages: {
-    signIn: "/login",
-  },
   // Add callbacks to handle redirects
   callbacks: {
   async redirect({ url, baseUrl }) {
-    if (url.startsWith("/")) return `${baseUrl}${url}`
     if (new URL(url).origin === baseUrl) return url
     return `${baseUrl}/dashboard`
   },
