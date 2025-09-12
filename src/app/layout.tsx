@@ -16,11 +16,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <AuthProvider>{children}</AuthProvider>
 
-        {/* Google One Tap SDK */}
         <Script
           src="https://accounts.google.com/gsi/client"
           strategy="afterInteractive"

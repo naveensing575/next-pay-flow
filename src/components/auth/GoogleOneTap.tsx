@@ -1,7 +1,20 @@
 "use client"
-
 import { useEffect } from "react"
-import { signIn } from "next-auth/react"
+import { signIn, useSession } from "next-auth/react"
+
+interface CredentialResponse {
+  credential: string
+  select_by: string
+}
+
+interface PromptMomentNotification {
+  isNotDisplayed: () => boolean
+  getNotDisplayedReason: () => string
+  isSkippedMoment: () => boolean
+  getSkippedReason: () => string
+  isDismissedMoment: () => boolean
+  getDismissedReason: () => string
+}
 
 declare global {
   interface Window {
@@ -19,50 +32,47 @@ declare global {
   }
 }
 
-interface CredentialResponse {
-  credential: string
-  select_by: string
-}
-
-interface PromptMomentNotification {
-  isNotDisplayed: () => boolean
-  getNotDisplayedReason: () => string
-  isSkippedMoment: () => boolean
-  getSkippedReason: () => string
-  isDismissedMoment: () => boolean
-  getDismissedReason: () => string
-}
-
 export default function GoogleOneTap() {
+  const { status } = useSession()
+
   useEffect(() => {
-    if (!window.google) {
-      console.warn("Google One Tap SDK not loaded yet")
-      return
+    // Don't show One Tap if user is already authenticated or still loading
+    if (status !== "unauthenticated") return
+
+    const initOneTap = () => {
+      if (!window.google?.accounts?.id) {
+        // Retry after a short delay if Google hasn't loaded yet
+        setTimeout(initOneTap, 100)
+        return
+      }
+
+      window.google.accounts.id.initialize({
+        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
+        callback: (response: CredentialResponse) => {
+          if (!response?.credential) return
+          signIn("google-onetap", {
+            credential: response.credential,
+            callbackUrl: "/dashboard",
+          })
+        },
+      })
+
+      window.google.accounts.id.prompt((notification) => {
+        if (notification.isNotDisplayed()) {
+          console.warn("One Tap not displayed:", notification.getNotDisplayedReason())
+        }
+        if (notification.isSkippedMoment()) {
+          console.warn("One Tap skipped:", notification.getSkippedReason())
+        }
+        if (notification.isDismissedMoment()) {
+          console.warn("One Tap dismissed:", notification.getDismissedReason())
+        }
+      })
     }
 
-    window.google.accounts.id.initialize({
-      client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
-      callback: (response: CredentialResponse) => {
-        console.log("One Tap response:", response)
-        signIn("google-onetap", {
-          credential: response.credential,
-          callbackUrl: "/dashboard",
-        })
-      },
-    })
-
-    window.google.accounts.id.prompt((notification) => {
-      if (notification.isNotDisplayed()) {
-        console.warn("One Tap not displayed:", notification.getNotDisplayedReason())
-      }
-      if (notification.isSkippedMoment()) {
-        console.warn("One Tap skipped:", notification.getSkippedReason())
-      }
-      if (notification.isDismissedMoment()) {
-        console.warn("One Tap dismissed:", notification.getDismissedReason())
-      }
-    })
-  }, [])
+    // Try to initialize immediately, with retries if Google hasn't loaded
+    initOneTap()
+  }, [status])
 
   return null
 }
