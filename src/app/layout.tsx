@@ -1,7 +1,7 @@
 import "./globals.css"
 import type { Metadata } from "next"
 import AuthProvider from "@/components/providers/SessionProvider"
-import Script from "next/script"
+// import Script from "next/script"
 
 export const metadata: Metadata = {
   title: "NextAuth + Mongo Demo",
@@ -21,10 +21,10 @@ export default function RootLayout({
         </AuthProvider>
 
         {/* Google One Tap SDK */}
-        <Script
+        {/* <Script
           src="https://accounts.google.com/gsi/client"
           strategy="afterInteractive"
-        />
+        /> */}
       </body>
     </html>
   )
