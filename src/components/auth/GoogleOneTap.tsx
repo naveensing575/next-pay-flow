@@ -1,4 +1,5 @@
 "use client"
+
 import { useEffect } from "react"
 import { signIn, useSession } from "next-auth/react"
 
@@ -48,12 +49,28 @@ export default function GoogleOneTap() {
 
       window.google.accounts.id.initialize({
         client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
-        callback: (response: CredentialResponse) => {
-          if (!response?.credential) return
-          signIn("google-onetap", {
-            credential: response.credential,
-            callbackUrl: "/dashboard",
-          })
+        callback: async (response: CredentialResponse) => {
+          if (!response?.credential) {
+            console.error("No credential received from Google One Tap")
+            return
+          }
+
+          try {
+            console.log("Google One Tap: Signing in...")
+            const result = await signIn("google-onetap", {
+              credential: response.credential,
+              callbackUrl: "/dashboard",
+              redirect: true, // Ensure redirect happens
+            })
+
+            if (result?.error) {
+              console.error("Google One Tap sign-in error:", result.error)
+            } else {
+              console.log("Google One Tap: Sign-in successful, redirecting...")
+            }
+          } catch (error) {
+            console.error("Google One Tap sign-in failed:", error)
+          }
         },
       })
 
