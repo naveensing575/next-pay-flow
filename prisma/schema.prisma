@@ -43,6 +43,7 @@ model Payment {
   userId    String
   user      User     @relation(fields: [userId], references: [id])
   amount    Int
+  meme      String
   status    String
   createdAt DateTime @default(now())
 }
