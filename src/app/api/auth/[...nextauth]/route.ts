@@ -39,34 +39,32 @@ export const authOptions: NextAuthOptions = {
             name: payload.name,
             image: payload.picture,
           }
-        } catch (error) {
-          console.error("Google One Tap verification failed:", error)
+        } catch {
           return null
         }
       },
     }),
   ],
   secret: process.env.NEXTAUTH_SECRET,
-  // Add callbacks to handle redirects
   callbacks: {
-  async redirect({ url, baseUrl }) {
-    if (new URL(url).origin === baseUrl) return url
-    return `${baseUrl}/dashboard`
+    async redirect({ url, baseUrl }) {
+      if (url.startsWith("/")) return `${baseUrl}${url}`
+      if (new URL(url).origin === baseUrl) return url
+      return baseUrl
+    },
+    async session({ session, token }) {
+      if (session.user && token.sub) {
+        session.user.id = token.sub
+      }
+      return session
+    },
+    async jwt({ token, user }) {
+      if (user) {
+        token.sub = user.id
+      }
+      return token
+    },
   },
-  async session({ session, token }) {
-    if (session.user && token.sub) {
-      session.user.id = token.sub
-    }
-    return session
-  },
-  async jwt({ token, user }) {
-    if (user) {
-      token.sub = user.id
-    }
-    return token
-  },
-},
-
   events: {
     async createUser(message: { user: User }) {
       try {
@@ -76,12 +74,11 @@ export const authOptions: NextAuthOptions = {
           { _id: new ObjectId(message.user.id) },
           { $set: { plan: "free", createdAt: new Date() } }
         )
-      } catch (error) {
-        console.error("Failed to create user record:", error)
-      }
+      } catch {}
     },
   },
 }
 
 const handler = NextAuth(authOptions)
+
 export { handler as GET, handler as POST }
