@@ -1,11 +1,9 @@
-import React from 'react'
+import { LoginButton } from "@/components/auth/LoginButton"
 
-const page = () => {
+export default function Home() {
   return (
-    <div>
-      Next Auth Flow
-    </div>
+    <main className="flex min-h-screen items-center justify-center">
+      <LoginButton />
+    </main>
   )
 }
-
-export default page
