@@ -53,26 +53,25 @@ export const authOptions: NextAuthOptions = {
   },
   // Add callbacks to handle redirects
   callbacks: {
-    async redirect({ url, baseUrl }) {
-      // Allows relative callback URLs
-      if (url.startsWith("/")) return `${baseUrl}${url}`
-      // Allows callback URLs on the same origin
-      else if (new URL(url).origin === baseUrl) return url
-      return baseUrl
-    },
-    async session({ session, token }) {
-      if (session.user && token.sub) {
-        session.user.id = token.sub
-      }
-      return session
-    },
-    async jwt({ token, user }) {
-      if (user) {
-        token.sub = user.id
-      }
-      return token
-    },
+  async redirect({ url, baseUrl }) {
+    if (url.startsWith("/")) return `${baseUrl}${url}`
+    if (new URL(url).origin === baseUrl) return url
+    return `${baseUrl}/dashboard`
   },
+  async session({ session, token }) {
+    if (session.user && token.sub) {
+      session.user.id = token.sub
+    }
+    return session
+  },
+  async jwt({ token, user }) {
+    if (user) {
+      token.sub = user.id
+    }
+    return token
+  },
+},
+
   events: {
     async createUser(message: { user: User }) {
       try {
