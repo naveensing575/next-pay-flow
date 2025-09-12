@@ -20,6 +20,7 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET!,
     }),
     CredentialsProvider({
+      id: "google-onetap",
       name: "Google One Tap",
       credentials: {
         credential: { label: "Google ID Token", type: "text" },
@@ -45,6 +46,12 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   secret: process.env.NEXTAUTH_SECRET,
+  callbacks: {
+    async redirect({ baseUrl }) {
+      // Always land on dashboard after login
+      return `${baseUrl}/dashboard`
+    },
+  },
   events: {
     async createUser(message: { user: User }) {
       await users.updateOne(

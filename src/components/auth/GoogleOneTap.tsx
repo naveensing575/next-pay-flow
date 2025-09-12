@@ -40,11 +40,9 @@ export default function GoogleOneTap() {
         client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
         callback: async (response: CredentialResponse) => {
           if (!response?.credential) return
-
           await signIn("google-onetap", {
             credential: response.credential,
-            callbackUrl: "/dashboard",
-            redirect: true
+            redirect: true, // NextAuth will handle redirect via callback
           })
         },
       })
