@@ -44,6 +44,7 @@ export default function GoogleOneTap() {
           await signIn("google-onetap", {
             credential: response.credential,
             callbackUrl: "/dashboard",
+            redirect: true
           })
         },
       })
