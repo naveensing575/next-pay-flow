@@ -12,10 +12,12 @@ import SubscriptionPlans from "@/components/dashboard/SubscriptionPlans"
 import Navbar from "@/components/dashboard/layout/Navbar"
 import Loader from "../ui/loader"
 import { useSession } from "next-auth/react"
+import Notification from "@/components/notification"
 
 interface DashboardProps {
   session: {
     user: {
+      id?: string
       name?: string | null
       email?: string | null
       image?: string | null
@@ -24,26 +26,92 @@ interface DashboardProps {
   }
 }
 
+// ✅ declare Razorpay type
+declare global {
+  interface Window {
+    Razorpay: new (options: unknown) => { open: () => void }
+  }
+}
+
 export default function Dashboard({ session }: DashboardProps) {
   const [showPlans, setShowPlans] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [notification, setNotification] = useState<{
+    type: "success" | "error"
+    message: string
+  } | null>(null)
   const { status } = useSession()
 
-  const handleUpgrade = (planId: string) => {
-    console.log("Upgrading to plan:", planId)
+  const handleUpgrade = async (planId: string) => {
+    try {
+      const res = await fetch("/api/payments/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ planId }),
+      })
+
+      const data = await res.json()
+      if (!data.order) throw new Error(data.error || "Order creation failed")
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID as string,
+        amount: data.order.amount,
+        currency: data.order.currency,
+        name: "Next Pay Flow",
+        description: `Subscribe to ${planId} plan`,
+        order_id: data.order.id,
+        handler: async (response: {
+          razorpay_order_id: string
+          razorpay_payment_id: string
+          razorpay_signature: string
+        }) => {
+          const verifyRes = await fetch("/api/payments/verify-payment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              orderId: response.razorpay_order_id,
+              paymentId: response.razorpay_payment_id,
+              signature: response.razorpay_signature,
+              planId,
+              userId: session?.user?.id,
+            }),
+          })
+
+          const verifyData = await verifyRes.json()
+          if (verifyData.success) {
+            setNotification({ type: "success", message: "Payment successful! 🎉" })
+            setTimeout(() => window.location.reload(), 1500)
+          } else {
+            setNotification({ type: "error", message: "Payment verification failed ❌" })
+          }
+        },
+        prefill: {
+          name: session?.user?.name || "User",
+          email: session?.user?.email || "test@example.com",
+        },
+        theme: { color: "#3399cc" },
+      }
+
+      const rzp = new window.Razorpay(options)
+      rzp.open()
+    } catch (err) {
+      console.error("Error upgrading:", err)
+      setNotification({ type: "error", message: "Something went wrong ❌" })
+    }
   }
 
-  // Show loader if session is loading or logout triggered
   if (status === "loading" || isLoggingOut) {
     return <Loader />
   }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Navbar */}
+      {notification && (
+        <Notification type={notification.type} message={notification.message} />
+      )}
+
       <Navbar session={session} onLogoutStart={() => setIsLoggingOut(true)} />
 
-      {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div
           className="mb-8"
@@ -72,17 +140,25 @@ export default function Dashboard({ session }: DashboardProps) {
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold mb-2">
-                    Unlock Premium Features
+                    {session?.user?.plan
+                      ? `Current Plan: ${session.user.plan}`
+                      : "Unlock Premium Features"}
                   </h3>
                   <p className="text-muted-foreground mb-4">
-                    Get unlimited projects, advanced analytics, and priority support.
+                    {session?.user?.plan
+                      ? "Manage your subscription below."
+                      : "Get unlimited projects, advanced analytics, and priority support."}
                   </p>
                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                     <Button
                       onClick={() => setShowPlans(!showPlans)}
                       className="bg-foreground text-background hover:opacity-90"
                     >
-                      {showPlans ? "Hide Plans" : "Upgrade to Pro"}
+                      {showPlans
+                        ? "Hide Plans"
+                        : session?.user?.plan
+                          ? "Change Plan"
+                          : "Upgrade to Pro"}
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
                   </motion.div>

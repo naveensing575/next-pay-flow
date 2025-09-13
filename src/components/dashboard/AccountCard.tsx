@@ -10,11 +10,20 @@ interface AccountCardProps {
       name?: string | null
       email?: string | null
       plan?: string | null
+      subscription?: {
+        planId?: string
+        status?: string
+        updatedAt?: string
+      }
     }
   }
 }
 
 export default function AccountCard({ session }: AccountCardProps) {
+  const subscription = session.user?.subscription
+  const plan = subscription?.planId || session.user?.plan || "free"
+  const status = subscription?.status || (plan !== "free" ? "active" : "inactive")
+
   return (
     <Card className="border-border bg-background text-foreground">
       <CardHeader>
@@ -30,11 +39,12 @@ export default function AccountCard({ session }: AccountCardProps) {
         <div>
           <p className="text-sm text-muted-foreground mb-1">Current Plan</p>
           <Badge
-            variant={session.user?.plan === 'free' ? 'secondary' : 'default'}
+            variant={plan === "free" ? "secondary" : "default"}
             className="capitalize"
           >
-            {session.user?.plan || 'Free'}
+            {plan}
           </Badge>
+          <p className="text-xs text-muted-foreground mt-1">Status: {status}</p>
         </div>
         <div>
           <p className="text-sm text-muted-foreground mb-1">Member Since</p>
