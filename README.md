@@ -1,6 +1,6 @@
 # Next Pay Flow
 
-A modern subscription management platform built with Next.js 14, featuring secure payment processing with Razorpay and Google OAuth authentication.
+A modern subscription management platform built with Next.js 15, featuring secure payment processing with Razorpay and Google OAuth authentication.
 
 ## ScreenShots
 
