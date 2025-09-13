@@ -1,5 +1,4 @@
 "use client"
-
 import { useState } from "react"
 import { motion } from "framer-motion"
 import { CreditCard, ArrowRight } from "lucide-react"
@@ -12,7 +11,7 @@ import SubscriptionPlans from "@/components/dashboard/SubscriptionPlans"
 import Navbar from "@/components/dashboard/layout/Navbar"
 import Loader from "../ui/loader"
 import { useSession } from "next-auth/react"
-import { notify } from "@/components/notification" 
+import { notify } from "@/components/notification"
 
 interface DashboardProps {
   session: {
@@ -26,7 +25,6 @@ interface DashboardProps {
   }
 }
 
-// ✅ declare Razorpay type
 declare global {
   interface Window {
     Razorpay: new (options: unknown) => { open: () => void }
@@ -36,7 +34,10 @@ declare global {
 export default function Dashboard({ session }: DashboardProps) {
   const [showPlans, setShowPlans] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
-  const { status } = useSession()
+  const { data: sessionData, status, update } = useSession()
+
+  // Use live session data instead of prop to get updated plan info
+  const currentSession = sessionData || session
 
   const handleUpgrade = async (planId: string) => {
     try {
@@ -45,7 +46,6 @@ export default function Dashboard({ session }: DashboardProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ planId }),
       })
-
       const data = await res.json()
       if (!data.order) throw new Error(data.error || "Order creation failed")
 
@@ -69,21 +69,23 @@ export default function Dashboard({ session }: DashboardProps) {
               paymentId: response.razorpay_payment_id,
               signature: response.razorpay_signature,
               planId,
-              userId: session?.user?.id,
+              userId: currentSession?.user?.id,
             }),
           })
 
           const verifyData = await verifyRes.json()
           if (verifyData.success) {
             notify("success", "Payment successful! 🎉")
+            // Update session to reflect new plan
+            await update()
             setTimeout(() => window.location.reload(), 1500)
           } else {
             notify("error", "Payment verification failed ❌")
           }
         },
         prefill: {
-          name: session?.user?.name || "User",
-          email: session?.user?.email || "test@example.com",
+          name: currentSession?.user?.name || "User",
+          email: currentSession?.user?.email || "test@example.com",
         },
         theme: { color: "#3399cc" },
       }
@@ -102,8 +104,7 @@ export default function Dashboard({ session }: DashboardProps) {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Navbar session={session} onLogoutStart={() => setIsLoggingOut(true)} />
-
+      <Navbar session={currentSession} onLogoutStart={() => setIsLoggingOut(true)} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div
           className="mb-8"
@@ -112,15 +113,13 @@ export default function Dashboard({ session }: DashboardProps) {
           transition={{ duration: 0.6 }}
         >
           <h2 className="text-3xl font-bold mb-2">
-            Welcome back, {session?.user?.name?.split(" ")[0] || "User"}!
+            Welcome back, {currentSession?.user?.name?.split(" ")[0] || "User"}!
           </h2>
           <p className="text-muted-foreground">
             Here&apos;s what&apos;s happening with your Next-Pay-Flow account today.
           </p>
         </motion.div>
-
         <StatsGrid />
-
         <div className="grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
             <motion.div
@@ -132,12 +131,12 @@ export default function Dashboard({ session }: DashboardProps) {
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold mb-2">
-                    {session?.user?.plan
-                      ? `Current Plan: ${session.user.plan}`
+                    {currentSession?.user?.plan
+                      ? `Current Plan: ${currentSession.user.plan}`
                       : "Unlock Premium Features"}
                   </h3>
                   <p className="text-muted-foreground mb-4">
-                    {session?.user?.plan
+                    {currentSession?.user?.plan
                       ? "Manage your subscription below."
                       : "Get unlimited projects, advanced analytics, and priority support."}
                   </p>
@@ -148,7 +147,7 @@ export default function Dashboard({ session }: DashboardProps) {
                     >
                       {showPlans
                         ? "Hide Plans"
-                        : session?.user?.plan
+                        : currentSession?.user?.plan
                           ? "Change Plan"
                           : "Upgrade to Pro"}
                       <ArrowRight className="w-4 h-4 ml-2" />
@@ -162,18 +161,16 @@ export default function Dashboard({ session }: DashboardProps) {
                 </div>
               </div>
             </motion.div>
-
             {showPlans && <SubscriptionPlans onUpgrade={handleUpgrade} />}
             <FeaturesList />
           </div>
-
           <motion.div
             className="space-y-6"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
-            <AccountCard session={session} />
+            <AccountCard session={currentSession} />
             <QuickActions />
           </motion.div>
         </div>
