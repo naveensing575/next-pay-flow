@@ -5,7 +5,8 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { CreditCard } from "lucide-react"
 import { useSession } from "next-auth/react"
-import Notification from "@/components/notification"
+import { notify } from "@/components/notification"
+
 declare global {
   interface Window {
     Razorpay: new (options: unknown) => { open: () => void }
@@ -34,12 +35,7 @@ export default function CheckoutPage() {
   const { planId } = useParams<{ planId?: string }>()
   const router = useRouter()
   const { data: session } = useSession()
-
   const [isPaying, setIsPaying] = useState(false)
-  const [notification, setNotification] = useState<{
-    type: "success" | "error"
-    message: string
-  } | null>(null)
 
   const plan = planId ? plans[planId as keyof typeof plans] : undefined
   if (!plan) {
@@ -87,10 +83,10 @@ export default function CheckoutPage() {
 
           const verifyData = await verifyRes.json()
           if (verifyData.success) {
-            setNotification({ type: "success", message: "Payment successful ✅" })
+            notify("success", "Payment successful ✅")
             setTimeout(() => router.push("/dashboard"), 1500)
           } else {
-            setNotification({ type: "error", message: "Payment verification failed ❌" })
+            notify("error", "Payment verification failed ❌")
           }
         },
         prefill: {
@@ -104,7 +100,7 @@ export default function CheckoutPage() {
       rzp.open()
     } catch (err) {
       console.error("Checkout failed:", err)
-      setNotification({ type: "error", message: "Something went wrong ❌" })
+      notify("error", "Something went wrong ❌")
     } finally {
       setIsPaying(false)
     }
@@ -112,10 +108,6 @@ export default function CheckoutPage() {
 
   return (
     <div className="max-w-2xl mx-auto p-8">
-      {notification && (
-        <Notification type={notification.type} message={notification.message} />
-      )}
-
       <h1 className="text-3xl font-bold mb-4">Checkout</h1>
       <div className="bg-card border border-border rounded-lg p-6">
         <h2 className="text-xl font-semibold mb-2">{plan.name}</h2>

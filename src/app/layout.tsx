@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import AuthProvider from "@/components/providers/SessionProvider"
 import Script from "next/script"
 import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "sonner"
 
 export const metadata: Metadata = {
   title: "Next Pay Flow",
@@ -24,6 +25,7 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
+            <Toaster position="top-right" richColors closeButton />
             {children}
           </ThemeProvider>
         </AuthProvider>

@@ -12,7 +12,7 @@ import SubscriptionPlans from "@/components/dashboard/SubscriptionPlans"
 import Navbar from "@/components/dashboard/layout/Navbar"
 import Loader from "../ui/loader"
 import { useSession } from "next-auth/react"
-import Notification from "@/components/notification"
+import { notify } from "@/components/notification" 
 
 interface DashboardProps {
   session: {
@@ -36,10 +36,6 @@ declare global {
 export default function Dashboard({ session }: DashboardProps) {
   const [showPlans, setShowPlans] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
-  const [notification, setNotification] = useState<{
-    type: "success" | "error"
-    message: string
-  } | null>(null)
   const { status } = useSession()
 
   const handleUpgrade = async (planId: string) => {
@@ -79,10 +75,10 @@ export default function Dashboard({ session }: DashboardProps) {
 
           const verifyData = await verifyRes.json()
           if (verifyData.success) {
-            setNotification({ type: "success", message: "Payment successful! 🎉" })
+            notify("success", "Payment successful! 🎉")
             setTimeout(() => window.location.reload(), 1500)
           } else {
-            setNotification({ type: "error", message: "Payment verification failed ❌" })
+            notify("error", "Payment verification failed ❌")
           }
         },
         prefill: {
@@ -96,7 +92,7 @@ export default function Dashboard({ session }: DashboardProps) {
       rzp.open()
     } catch (err) {
       console.error("Error upgrading:", err)
-      setNotification({ type: "error", message: "Something went wrong ❌" })
+      notify("error", "Something went wrong ❌")
     }
   }
 
@@ -106,10 +102,6 @@ export default function Dashboard({ session }: DashboardProps) {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {notification && (
-        <Notification type={notification.type} message={notification.message} />
-      )}
-
       <Navbar session={session} onLogoutStart={() => setIsLoggingOut(true)} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
