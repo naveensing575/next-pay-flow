@@ -14,6 +14,7 @@ interface NavbarProps {
       plan?: string | null
     }
   }
+  onLogoutStart?: () => void
 }
 
 export default function Navbar({ session }: NavbarProps) {

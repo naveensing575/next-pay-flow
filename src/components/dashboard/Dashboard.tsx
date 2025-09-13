@@ -10,6 +10,8 @@ import AccountCard from "@/components/dashboard/AccountCard"
 import QuickActions from "@/components/dashboard/QuickActions"
 import SubscriptionPlans from "@/components/dashboard/SubscriptionPlans"
 import Navbar from "@/components/dashboard/layout/Navbar"
+import Loader from "../ui/loader"
+import { useSession } from "next-auth/react"
 
 interface DashboardProps {
   session: {
@@ -24,19 +26,25 @@ interface DashboardProps {
 
 export default function Dashboard({ session }: DashboardProps) {
   const [showPlans, setShowPlans] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const { status } = useSession()
 
   const handleUpgrade = (planId: string) => {
     console.log("Upgrading to plan:", planId)
   }
 
+  // Show loader if session is loading or logout triggered
+  if (status === "loading" || isLoggingOut) {
+    return <Loader />
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Navbar */}
-      <Navbar session={session} />
+      <Navbar session={session} onLogoutStart={() => setIsLoggingOut(true)} />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Section */}
         <motion.div
           className="mb-8"
           initial={{ opacity: 0, y: 20 }}
@@ -54,7 +62,6 @@ export default function Dashboard({ session }: DashboardProps) {
         <StatsGrid />
 
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Left Column */}
           <div className="lg:col-span-2 space-y-6">
             <motion.div
               className="bg-card p-6 rounded-xl border border-border"
@@ -92,11 +99,10 @@ export default function Dashboard({ session }: DashboardProps) {
             <FeaturesList />
           </div>
 
-          {/* Right Column */}
           <motion.div
             className="space-y-6"
             initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
             <AccountCard session={session} />
