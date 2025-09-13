@@ -2,6 +2,30 @@
 
 A modern subscription management platform built with Next.js 14, featuring secure payment processing with Razorpay and Google OAuth authentication.
 
+## ScreenShots
+
+### Google Login
+<img width="545" height="334" alt="image" src="https://github.com/user-attachments/assets/43933493-ec45-44e7-ad35-4947bf5d7fc1" />
+
+### Free plan
+<img width="959" height="506" alt="1" src="https://github.com/user-attachments/assets/0e779bfe-476b-4542-a36d-22d3fbf80112" />
+
+
+### Payment for professional plan
+<img width="902" height="482" alt="3" src="https://github.com/user-attachments/assets/449b6a09-f611-4eca-a70e-5e62f9eee154" />
+
+<img width="959" height="599" alt="4" src="https://github.com/user-attachments/assets/70d7d59a-afc3-43ac-b1af-807759ba1d35" />
+
+
+### Updated Subscription
+<img width="959" height="511" alt="2" src="https://github.com/user-attachments/assets/623faf05-3c1a-4aaf-aff8-f9b6cf941556" />
+
+
+### Subscription plans
+<img width="658" height="460" alt="image" src="https://github.com/user-attachments/assets/7f61bbb1-971f-41ee-a306-7a3c060c43c7" />
+
+
+
 ## Features
 
 - **Authentication System**
