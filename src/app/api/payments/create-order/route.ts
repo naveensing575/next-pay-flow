@@ -9,20 +9,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Plan ID required" }, { status: 400 });
     }
 
-    // Plan pricing (could also be in DB)
+    // Plans in rupees
     const plans: Record<string, number> = {
-      basic: 500, // in INR paise (₹5.00 => 500 paise)
-      professional: 2500, // ₹25.00
-      business: 4500, // ₹45.00
+      basic: 5,
+      professional: 25,
+      business: 45,
     };
 
     if (!plans[planId]) {
       return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
     }
 
-    // Create order
     const options = {
-      amount: plans[planId] * 100, // paise
+      amount: plans[planId] * 100, // convert ₹ to paise
       currency: "INR",
       receipt: `receipt_${Date.now()}`,
     };
@@ -41,12 +40,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ order });
   } catch (err: unknown) {
-    if (err instanceof Error) {
-      console.error("Error in verify-payment:", err.message, err.stack);
-    } else {
-      console.error("Unknown error in verify-payment:", err);
-    }
-
+    console.error("Error in create-order:", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

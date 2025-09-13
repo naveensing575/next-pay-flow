@@ -33,28 +33,24 @@ export async function POST(req: NextRequest) {
       }
     );
 
-    // Update user record with subscription info
-    await db.collection("users").updateOne(
-      { _id: new ObjectId(userId) },
-      {
-        $set: {
-          subscription: {
-            planId,
-            status: "active",
-            updatedAt: new Date(),
-          },
+    // Handle ObjectId vs string IDs
+    const userQuery = ObjectId.isValid(userId)
+      ? { _id: new ObjectId(userId) }
+      : { _id: userId };
+
+    await db.collection("users").updateOne(userQuery, {
+      $set: {
+        subscription: {
+          planId,
+          status: "active",
+          updatedAt: new Date(),
         },
-      }
-    );
+      },
+    });
 
     return NextResponse.json({ success: true });
   } catch (err: unknown) {
-    if (err instanceof Error) {
-      console.error("Error in verify-payment:", err.message, err.stack);
-    } else {
-      console.error("Unknown error in verify-payment:", err);
-    }
-
+    console.error("Error in verify-payment:", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
