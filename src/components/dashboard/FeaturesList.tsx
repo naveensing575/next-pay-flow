@@ -40,7 +40,7 @@ export default function FeaturesList() {
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.6, delay: 0.3 }}
     >
-      <Card className="border-border bg-background text-foreground">
+      <Card className="border-border bg-card text-foreground">
         <CardHeader>
           <CardTitle className="text-lg font-semibold text-foreground">
             Why Choose Next-Pay-Flow?

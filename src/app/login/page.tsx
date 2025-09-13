@@ -6,8 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function LoginPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950 px-4">
-      <Card className="w-full max-w-md shadow-lg border border-gray-200 dark:border-gray-800">
+    <div className="flex min-h-screen items-center justify-center bg-background text-foreground px-4">
+      <Card className="w-full max-w-md shadow-lg border border-border bg-card text-card-foreground">
         <CardHeader>
           <CardTitle className="text-center text-2xl font-bold tracking-tight">
             Welcome Back
@@ -15,13 +15,13 @@ export default function LoginPage() {
         </CardHeader>
 
         <CardContent className="flex flex-col items-center gap-6">
-          <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
+          <p className="text-sm text-muted-foreground text-center">
             Sign in to continue to your dashboard
           </p>
 
           <Button
             onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
-            className="w-full h-11 font-medium"
+            className="w-full h-11 font-medium bg-foreground text-background hover:opacity-90"
           >
             <svg
               className="mr-2 h-5 w-5"
