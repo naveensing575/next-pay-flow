@@ -15,24 +15,24 @@ export default function QuickActions() {
     {
       title: "Create New Project",
       desc: "Start a new payment flow",
-      icon: CreditCard
+      icon: CreditCard,
     },
     {
       title: "View Analytics",
       desc: "Check your performance",
-      icon: BarChart3
+      icon: BarChart3,
     },
     {
       title: "Manage Team",
       desc: "Invite team members",
-      icon: Users
-    }
+      icon: Users,
+    },
   ]
 
   return (
-    <Card className="border-gray-200">
+    <Card className="border-border bg-background text-foreground">
       <CardHeader>
-        <CardTitle className="text-lg font-semibold text-gray-900">
+        <CardTitle className="text-lg font-semibold text-foreground">
           Quick Actions
         </CardTitle>
       </CardHeader>
@@ -41,17 +41,17 @@ export default function QuickActions() {
           {actions.map((action, index) => (
             <motion.button
               key={action.title}
-              className="w-full text-left p-3 rounded-lg hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200"
+              className="w-full text-left p-3 rounded-lg transition-colors border border-transparent hover:bg-muted hover:border-border"
               whileHover={{ x: 4 }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.6 + index * 0.1 }}
             >
               <div className="flex items-center">
-                <action.icon className="w-4 h-4 text-gray-600 mr-3" />
+                <action.icon className="w-4 h-4 text-muted-foreground mr-3" />
                 <div>
-                  <p className="font-medium text-gray-900">{action.title}</p>
-                  <p className="text-sm text-gray-600">{action.desc}</p>
+                  <p className="font-medium text-foreground">{action.title}</p>
+                  <p className="text-sm text-muted-foreground">{action.desc}</p>
                 </div>
               </div>
             </motion.button>

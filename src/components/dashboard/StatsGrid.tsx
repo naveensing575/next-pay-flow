@@ -14,29 +14,29 @@ interface StatItem {
 export default function StatsGrid() {
   const stats: StatItem[] = [
     {
-      label: 'Active Projects',
-      value: '12',
+      label: "Active Projects",
+      value: "12",
       icon: TrendingUp,
-      change: '+23%'
+      change: "+23%",
     },
     {
-      label: 'Total Transactions',
-      value: '1,429',
+      label: "Total Transactions",
+      value: "1,429",
       icon: CreditCard,
-      change: '+12%'
+      change: "+12%",
     },
     {
-      label: 'Team Members',
-      value: '8',
+      label: "Team Members",
+      value: "8",
       icon: Users,
-      change: '+2'
+      change: "+2",
     },
     {
-      label: 'Storage Used',
-      value: '2.1 GB',
+      label: "Storage Used",
+      value: "2.1 GB",
       icon: Database,
-      change: '12%'
-    }
+      change: "12%",
+    },
   ]
 
   return (
@@ -54,18 +54,18 @@ export default function StatsGrid() {
           transition={{ duration: 0.4, delay: index * 0.1 }}
           whileHover={{ y: -4 }}
         >
-          <Card className="border-gray-200 hover:shadow-md transition-all duration-200">
+          <Card className="border-border bg-background text-foreground hover:shadow-md transition-all duration-200">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <stat.icon className="w-5 h-5 text-gray-600" />
-                <span className="text-sm font-medium text-green-600">
+                <stat.icon className="w-5 h-5 text-muted-foreground" />
+                <span className="text-sm font-medium text-muted-foreground">
                   {stat.change}
                 </span>
               </div>
-              <p className="text-2xl font-bold text-gray-900 mb-1">
+              <p className="text-2xl font-bold text-foreground mb-1">
                 {stat.value}
               </p>
-              <p className="text-sm text-gray-600">{stat.label}</p>
+              <p className="text-sm text-muted-foreground">{stat.label}</p>
             </CardContent>
           </Card>
         </motion.div>

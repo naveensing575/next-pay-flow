@@ -2,6 +2,7 @@ import "./globals.css"
 import type { Metadata } from "next"
 import AuthProvider from "@/components/providers/SessionProvider"
 import Script from "next/script"
+import { ThemeProvider } from "@/components/theme-provider"
 
 export const metadata: Metadata = {
   title: "NextAuth + Mongo Demo",
@@ -14,9 +15,18 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+          </ThemeProvider>
+        </AuthProvider>
 
         <Script
           src="https://accounts.google.com/gsi/client"

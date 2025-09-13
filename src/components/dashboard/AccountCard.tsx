@@ -9,26 +9,26 @@ interface AccountCardProps {
     user: {
       name?: string | null
       email?: string | null
-      plan?: string
+      plan?: string | null
     }
   }
 }
 
 export default function AccountCard({ session }: AccountCardProps) {
   return (
-    <Card className="border-gray-200">
+    <Card className="border-border bg-background text-foreground">
       <CardHeader>
-        <CardTitle className="text-lg font-semibold text-gray-900">
+        <CardTitle className="text-lg font-semibold text-foreground">
           Account Details
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <p className="text-sm text-gray-600 mb-1">Email</p>
-          <p className="font-medium text-gray-900">{session.user?.email}</p>
+          <p className="text-sm text-muted-foreground mb-1">Email</p>
+          <p className="font-medium text-foreground">{session.user?.email}</p>
         </div>
         <div>
-          <p className="text-sm text-gray-600 mb-1">Current Plan</p>
+          <p className="text-sm text-muted-foreground mb-1">Current Plan</p>
           <Badge
             variant={session.user?.plan === 'free' ? 'secondary' : 'default'}
             className="capitalize"
@@ -37,10 +37,10 @@ export default function AccountCard({ session }: AccountCardProps) {
           </Badge>
         </div>
         <div>
-          <p className="text-sm text-gray-600 mb-1">Member Since</p>
-          <p className="font-medium text-gray-900">January 2024</p>
+          <p className="text-sm text-muted-foreground mb-1">Member Since</p>
+          <p className="font-medium text-foreground">January 2024</p>
         </div>
-        <div className="pt-4 border-t border-gray-100">
+        <div className="pt-4 border-t border-border">
           <LogoutButton />
         </div>
       </CardContent>
