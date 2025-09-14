@@ -45,20 +45,24 @@ export default function UserDropdown({ session }: UserDropdownProps) {
         </button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent className="w-64 p-3 space-y-3">
+      <DropdownMenuContent className="w-72 p-4 space-y-4 rounded-xl shadow-lg">
         {/* User Info */}
         <div className="flex items-center space-x-3">
-          {image && (
+          {image ? (
             <Image
               src={image}
               alt={name || "User"}
-              width={40}
-              height={40}
+              width={48}
+              height={48}
               className="rounded-full border border-border"
             />
+          ) : (
+            <div className="w-12 h-12 flex items-center justify-center rounded-full bg-muted text-lg font-semibold">
+              {name?.[0] || "U"}
+            </div>
           )}
-          <div>
-            <p className="font-medium text-sm">{name}</p>
+          <div className="flex flex-col min-w-0">
+            <p className="font-semibold text-sm truncate">{name}</p>
             <p className="text-xs text-muted-foreground truncate">{email}</p>
           </div>
         </div>
@@ -66,9 +70,12 @@ export default function UserDropdown({ session }: UserDropdownProps) {
         <DropdownMenuSeparator />
 
         {/* Plan Info */}
-        <div className="flex items-center justify-between text-sm">
-          <span>Plan:</span>
-          <Badge variant={plan === "free" ? "secondary" : "default"}>
+        <div className="flex flex-col space-y-1 text-sm">
+          <span className="text-muted-foreground">Current Plan</span>
+          <Badge
+            className="w-fit px-2 py-0.5 text-xs"
+            variant={plan?.toLowerCase() === "free" ? "secondary" : "default"}
+          >
             {plan || "Free"}
           </Badge>
         </div>
@@ -76,8 +83,8 @@ export default function UserDropdown({ session }: UserDropdownProps) {
         <DropdownMenuSeparator />
 
         {/* Logout */}
-        <DropdownMenuItem asChild>
-          <LogoutButton/>
+        <DropdownMenuItem asChild className="p-0">
+          <LogoutButton />
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

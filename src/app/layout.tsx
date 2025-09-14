@@ -2,7 +2,7 @@ import "./globals.css"
 import type { Metadata } from "next"
 import AuthProvider from "@/components/providers/SessionProvider"
 import Script from "next/script"
-import { ThemeProvider } from "@/components/theme-provider"
+import { ThemeProvider } from "@/components/theme/theme-provider"
 import { Toaster } from "sonner"
 
 export const metadata: Metadata = {

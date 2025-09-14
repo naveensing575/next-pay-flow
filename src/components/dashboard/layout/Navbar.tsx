@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion"
 import { CreditCard } from "lucide-react"
-import { ThemeToggle } from "@/components/theme-toggle"
+import { ThemeToggle } from "@/components/theme/theme-toggle"
 import UserDropdown from "./UserDropdown"
 
 interface NavbarProps {
