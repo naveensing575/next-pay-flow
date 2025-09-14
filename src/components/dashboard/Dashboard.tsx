@@ -37,6 +37,7 @@ export default function Dashboard({ session }: DashboardProps) {
 
   const handleUpgrade = async (planId: string) => {
     try {
+      // Create order
       const res = await fetch("/api/payments/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -57,22 +58,30 @@ export default function Dashboard({ session }: DashboardProps) {
           razorpay_payment_id: string
           razorpay_signature: string
         }) => {
-          const verifyRes = await fetch("/api/payments/verify-payment", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              orderId: response.razorpay_order_id,
-              paymentId: response.razorpay_payment_id,
-              signature: response.razorpay_signature,
-              planId,
-              userId: currentSession?.user?.id,
-            }),
-          })
-          const verifyData = await verifyRes.json()
-          if (verifyData.success) {
-            notify("success", "Payment successful! 🎉")
-            await update()
-          } else {
+          try {
+            // Verify payment
+            const verifyRes = await fetch("/api/payments/verify-payment", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                orderId: response.razorpay_order_id,
+                paymentId: response.razorpay_payment_id,
+                signature: response.razorpay_signature,
+                planId,
+                userId: currentSession?.user?.id,
+              }),
+            })
+            const verifyData = await verifyRes.json()
+
+            if (verifyData.success) {
+              notify("success", "Payment successful! 🎉")
+              // Refresh session to show updated plan immediately
+              await update()
+            } else {
+              notify("error", "Payment verification failed ❌")
+            }
+          } catch (verifyError) {
+            console.error("Payment verification error:", verifyError)
             notify("error", "Payment verification failed ❌")
           }
         },
@@ -96,16 +105,22 @@ export default function Dashboard({ session }: DashboardProps) {
 
   const renderPlanBadge = () => {
     switch (userPlan) {
-      case "premium":
-        return (
-          <Badge className="bg-blue-600 text-white">
-            <Crown className="w-3 h-3 mr-1" /> Premium
-          </Badge>
-        )
       case "basic":
         return (
           <Badge className="bg-yellow-500 text-white">
             <Star className="w-3 h-3 mr-1" /> Basic
+          </Badge>
+        )
+      case "professional":
+        return (
+          <Badge className="bg-blue-600 text-white">
+            <Crown className="w-3 h-3 mr-1" /> Professional
+          </Badge>
+        )
+      case "business":
+        return (
+          <Badge className="bg-purple-600 text-white">
+            <Gem className="w-3 h-3 mr-1" /> Business
           </Badge>
         )
       default:

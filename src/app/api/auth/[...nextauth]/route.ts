@@ -43,15 +43,16 @@ export const authOptions: NextAuthOptions = {
   ],
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
+    // Include subscription plan in session
     async session({ session, user }) {
       if (session.user) {
         session.user.id = user.id
 
-        const dbUser = await users.findOne({ _id: new ObjectId(user.id) })
-
-        if (dbUser?.subscription?.planId) {
-          session.user.plan = dbUser.subscription.planId
-        } else {
+        try {
+          const dbUser = await users.findOne({ _id: new ObjectId(user.id) })
+          session.user.plan = dbUser?.subscription?.planId || "free"
+        } catch (error) {
+          console.error("Error fetching user subscription:", error)
           session.user.plan = "free"
         }
       }
@@ -62,6 +63,7 @@ export const authOptions: NextAuthOptions = {
     },
   },
   events: {
+    // Initialize new users with free plan
     async createUser(message: { user: User }) {
       await users.updateOne(
         { _id: new ObjectId(message.user.id) },

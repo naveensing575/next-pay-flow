@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Verify Razorpay signature
+    // Verify Razorpay signature for security
     const expectedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET!)
       .update(orderId + "|" + paymentId)
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     const client = await clientPromise;
     const db = client.db();
 
-    // Update subscription record
+    // Update subscription record with payment details
     await db.collection("subscriptions").updateOne(
       { orderId },
       {
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
       }
     );
 
-    // Update user record
+    // Update user's subscription plan - this is what the session callback reads
     await db.collection("users").updateOne(
       { _id: new ObjectId(userId) },
       {

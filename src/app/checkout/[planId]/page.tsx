@@ -1,5 +1,5 @@
+// checkout/[planId]/page.tsx
 "use client"
-
 import { useParams, useRouter } from "next/navigation"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -34,10 +34,11 @@ const plans = {
 export default function CheckoutPage() {
   const { planId } = useParams<{ planId?: string }>()
   const router = useRouter()
-  const { data: session } = useSession()
+  const { data: session, update } = useSession() // Added update function
   const [isPaying, setIsPaying] = useState(false)
 
   const plan = planId ? plans[planId as keyof typeof plans] : undefined
+
   if (!plan) {
     return <p className="p-8">Invalid plan</p>
   }
@@ -45,17 +46,16 @@ export default function CheckoutPage() {
   const handlePayNow = async () => {
     setIsPaying(true)
     try {
-      // Step 1: Create order
+      // Create Razorpay order
       const res = await fetch("/api/payments/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ planId }),
       })
-
       const data = await res.json()
       if (!data.order) throw new Error(data.error || "Order creation failed")
 
-      // Step 2: Open Razorpay checkout
+      // Open Razorpay checkout
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID as string,
         amount: data.order.amount,
@@ -68,24 +68,36 @@ export default function CheckoutPage() {
           razorpay_payment_id: string
           razorpay_signature: string
         }) => {
-          // Step 3: Verify payment
-          const verifyRes = await fetch("/api/payments/verify-payment", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              orderId: response.razorpay_order_id,
-              paymentId: response.razorpay_payment_id,
-              signature: response.razorpay_signature,
-              planId,
-              userId: session?.user?.id,
-            }),
-          })
+          try {
+            // Verify payment and update user subscription
+            const verifyRes = await fetch("/api/payments/verify-payment", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                orderId: response.razorpay_order_id,
+                paymentId: response.razorpay_payment_id,
+                signature: response.razorpay_signature,
+                planId,
+                userId: session?.user?.id,
+              }),
+            })
+            const verifyData = await verifyRes.json()
 
-          const verifyData = await verifyRes.json()
-          if (verifyData.success) {
-            notify("success", "Payment successful ✅")
-            setTimeout(() => router.push("/dashboard"), 1500)
-          } else {
+            if (verifyData.success) {
+              notify("success", "Payment successful ✅")
+
+              // Force session refresh to get updated plan
+              await update()
+
+              setTimeout(() => {
+                router.push("/dashboard")
+                router.refresh() // Ensure fresh data on dashboard
+              }, 2000)
+            } else {
+              notify("error", "Payment verification failed ❌")
+            }
+          } catch (verifyError) {
+            console.error("Payment verification error:", verifyError)
             notify("error", "Payment verification failed ❌")
           }
         },
@@ -95,7 +107,6 @@ export default function CheckoutPage() {
         },
         theme: { color: "#3399cc" },
       }
-
       const rzp = new window.Razorpay(options)
       rzp.open()
     } catch (err) {
@@ -111,7 +122,7 @@ export default function CheckoutPage() {
       <h1 className="text-3xl font-bold mb-4">Checkout</h1>
       <div className="bg-card border border-border rounded-lg p-6">
         <h2 className="text-xl font-semibold mb-2">{plan.name}</h2>
-        <p className="text-2xl font-bold mb-4">${plan.price}.00 / month</p>
+        <p className="text-2xl font-bold mb-4">₹{plan.price}.00 / month</p>
         <ul className="mb-4 list-disc list-inside text-muted-foreground">
           {plan.features.map((f) => (
             <li key={f}>{f}</li>
