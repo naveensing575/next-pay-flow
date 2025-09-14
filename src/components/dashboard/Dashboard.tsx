@@ -1,7 +1,7 @@
 "use client"
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { Crown } from "lucide-react"
+import { Crown, Star, Gem } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import SubscriptionPlans from "@/components/dashboard/SubscriptionPlans"
@@ -33,8 +33,7 @@ export default function Dashboard({ session }: DashboardProps) {
   const { data: sessionData, status, update } = useSession()
 
   const currentSession = sessionData || session
-  const isPremium =
-    currentSession?.user?.plan && currentSession.user.plan !== "Free"
+  const userPlan = currentSession?.user?.plan?.toLowerCase() || "free"
 
   const handleUpgrade = async (planId: string) => {
     try {
@@ -81,7 +80,7 @@ export default function Dashboard({ session }: DashboardProps) {
           name: currentSession?.user?.name || "User",
           email: currentSession?.user?.email || "test@example.com",
         },
-        theme: { color: "#2563eb" }, // blue accent
+        theme: { color: "#2563eb" },
       }
       const rzp = new window.Razorpay(options)
       rzp.open()
@@ -93,6 +92,29 @@ export default function Dashboard({ session }: DashboardProps) {
 
   if (status === "loading" || isLoggingOut) {
     return <Loader />
+  }
+
+  const renderPlanBadge = () => {
+    switch (userPlan) {
+      case "premium":
+        return (
+          <Badge className="bg-blue-600 text-white">
+            <Crown className="w-3 h-3 mr-1" /> Premium
+          </Badge>
+        )
+      case "basic":
+        return (
+          <Badge className="bg-yellow-500 text-white">
+            <Star className="w-3 h-3 mr-1" /> Basic
+          </Badge>
+        )
+      default:
+        return (
+          <Badge className="bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
+            <Gem className="w-3 h-3 mr-1" /> Free
+          </Badge>
+        )
+    }
   }
 
   return (
@@ -113,24 +135,10 @@ export default function Dashboard({ session }: DashboardProps) {
           <h2 className="text-3xl font-bold">
             Welcome, {currentSession?.user?.name?.split(" ")[0] || "User"}
           </h2>
-          <Badge
-            className={
-              isPremium
-                ? "bg-blue-600 text-white"
-                : "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
-            }
-          >
-            {isPremium ? (
-              <div className="flex items-center gap-1">
-                <Crown className="w-3 h-3" /> Premium
-              </div>
-            ) : (
-              "Free Plan"
-            )}
-          </Badge>
+          {renderPlanBadge()}
         </motion.div>
 
-        {/* Subscription Plans (main focus) */}
+        {/* Subscription Plans */}
         <Card className="border-blue-200 shadow-lg">
           <CardContent className="p-6">
             <SubscriptionPlans onUpgrade={handleUpgrade} />

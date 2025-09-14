@@ -45,35 +45,37 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async session({ session, user }) {
       if (session.user) {
-        session.user.id = user.id;
-        
-        // Fetch current user data to get updated subscription
-        const dbUser = await users.findOne({ _id: new ObjectId(user.id) });
-        console.log("Debug - DB User:", dbUser);
-        
-        if (dbUser?.subscription) {
-          session.user.plan = dbUser.subscription.planId;
-          console.log("Debug - Plan from subscription:", dbUser.subscription.planId);
-        } else if (dbUser?.plan) {
-          session.user.plan = dbUser.plan;
-          console.log("Debug - Plan from legacy field:", dbUser.plan);
+        session.user.id = user.id
+
+        const dbUser = await users.findOne({ _id: new ObjectId(user.id) })
+
+        if (dbUser?.subscription?.planId) {
+          session.user.plan = dbUser.subscription.planId
+        } else {
+          session.user.plan = "free"
         }
-        
-        console.log("Debug - Final session plan:", session.user.plan);
       }
-      return session;
+      return session
     },
     async redirect({ baseUrl }) {
-      return `${baseUrl}/dashboard`;
+      return `${baseUrl}/dashboard`
     },
   },
   events: {
     async createUser(message: { user: User }) {
       await users.updateOne(
         { _id: new ObjectId(message.user.id) },
-        { $set: { plan: "free", createdAt: new Date() } }
+        {
+          $set: {
+            subscription: {
+              planId: "free",
+              status: "active",
+              updatedAt: new Date(),
+            },
+            createdAt: new Date(),
+          },
+        }
       )
-      console.log("User created with plan: free", message.user.email)
     },
   },
 }
