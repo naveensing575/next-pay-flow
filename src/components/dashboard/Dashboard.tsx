@@ -1,12 +1,9 @@
 "use client"
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { CreditCard, ArrowRight } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import StatsGrid from "@/components/dashboard/StatsGrid"
-import FeaturesList from "@/components/dashboard/FeaturesList"
-import AccountCard from "@/components/dashboard/AccountCard"
-import QuickActions from "@/components/dashboard/QuickActions"
+import { Crown } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import SubscriptionPlans from "@/components/dashboard/SubscriptionPlans"
 import Navbar from "@/components/dashboard/layout/Navbar"
 import Loader from "../ui/loader"
@@ -32,12 +29,12 @@ declare global {
 }
 
 export default function Dashboard({ session }: DashboardProps) {
-  const [showPlans, setShowPlans] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const { data: sessionData, status, update } = useSession()
 
-  // Use live session data instead of prop to get updated plan info
   const currentSession = sessionData || session
+  const isPremium =
+    currentSession?.user?.plan && currentSession.user.plan !== "Free"
 
   const handleUpgrade = async (planId: string) => {
     try {
@@ -72,13 +69,10 @@ export default function Dashboard({ session }: DashboardProps) {
               userId: currentSession?.user?.id,
             }),
           })
-
           const verifyData = await verifyRes.json()
           if (verifyData.success) {
             notify("success", "Payment successful! 🎉")
-            // Update session to reflect new plan
             await update()
-            setTimeout(() => window.location.reload(), 1500)
           } else {
             notify("error", "Payment verification failed ❌")
           }
@@ -87,9 +81,8 @@ export default function Dashboard({ session }: DashboardProps) {
           name: currentSession?.user?.name || "User",
           email: currentSession?.user?.email || "test@example.com",
         },
-        theme: { color: "#3399cc" },
+        theme: { color: "#2563eb" }, // blue accent
       }
-
       const rzp = new window.Razorpay(options)
       rzp.open()
     } catch (err) {
@@ -103,77 +96,46 @@ export default function Dashboard({ session }: DashboardProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <Navbar session={currentSession} onLogoutStart={() => setIsLoggingOut(true)} />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-white to-blue-50 dark:from-black dark:to-gray-900">
+      <Navbar
+        session={currentSession}
+        onLogoutStart={() => setIsLoggingOut(true)}
+      />
+
+      <div className="max-w-4xl mx-auto px-4 py-12">
+        {/* Welcome header */}
         <motion.div
-          className="mb-8"
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.5 }}
+          className="mb-10 flex items-center justify-between"
         >
-          <h2 className="text-3xl font-bold mb-2">
-            Welcome back, {currentSession?.user?.name?.split(" ")[0] || "User"}!
+          <h2 className="text-3xl font-bold">
+            Welcome, {currentSession?.user?.name?.split(" ")[0] || "User"}
           </h2>
-          <p className="text-muted-foreground">
-            Here&apos;s what&apos;s happening with your Next-Pay-Flow account today.
-          </p>
-        </motion.div>
-        <StatsGrid />
-        <div className="grid lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
-            <motion.div
-              className="bg-card p-6 rounded-xl border border-border"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold mb-2">
-                    {currentSession?.user?.plan
-                      ? `Current Plan: ${currentSession.user.plan}`
-                      : "Unlock Premium Features"}
-                  </h3>
-                  <p className="text-muted-foreground mb-4">
-                    {currentSession?.user?.plan
-                      ? "Manage your subscription below."
-                      : "Get unlimited projects, advanced analytics, and priority support."}
-                  </p>
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Button
-                      onClick={() => setShowPlans(!showPlans)}
-                      className="bg-foreground text-background hover:opacity-90"
-                    >
-                      {showPlans
-                        ? "Hide Plans"
-                        : currentSession?.user?.plan
-                          ? "Change Plan"
-                          : "Upgrade to Pro"}
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </motion.div>
-                </div>
-                <div className="hidden md:block ml-6">
-                  <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center">
-                    <CreditCard className="w-8 h-8 text-muted-foreground" />
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-            {showPlans && <SubscriptionPlans onUpgrade={handleUpgrade} />}
-            <FeaturesList />
-          </div>
-          <motion.div
-            className="space-y-6"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
+          <Badge
+            className={
+              isPremium
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+            }
           >
-            <AccountCard session={currentSession} />
-            <QuickActions />
-          </motion.div>
-        </div>
+            {isPremium ? (
+              <div className="flex items-center gap-1">
+                <Crown className="w-3 h-3" /> Premium
+              </div>
+            ) : (
+              "Free Plan"
+            )}
+          </Badge>
+        </motion.div>
+
+        {/* Subscription Plans (main focus) */}
+        <Card className="border-blue-200 shadow-lg">
+          <CardContent className="p-6">
+            <SubscriptionPlans onUpgrade={handleUpgrade} />
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

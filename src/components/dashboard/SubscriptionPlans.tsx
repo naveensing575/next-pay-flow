@@ -65,19 +65,23 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({ onUpgrade }) => {
         Choose your plan
       </motion.h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <motion.div layout className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {plans.map((plan) => {
           const isSelected = selectedPlan === plan.id
           return (
             <motion.div
               key={plan.id}
-              className={`relative flex flex-col justify-between p-6 md:p-8 rounded-xl border transition-all h-full ${isSelected
-                  ? "border-foreground"
-                  : "border-border hover:border-foreground/40"
-                } ${plan.popular ? "ring-2 ring-foreground/40" : ""}`}
+              layoutId={plan.id}
+              onClick={() => setSelectedPlan(plan.id)}
+              className={`relative flex flex-col justify-between p-6 md:p-8 rounded-2xl border cursor-pointer transition-all h-full ${isSelected
+                  ? "border-indigo-500 shadow-xl"
+                  : "border-border hover:border-indigo-400/60"
+                } ${plan.popular ? "ring-1 ring-indigo-300/40" : ""}`}
               whileHover={{ y: -4 }}
-              whileTap={{ scale: 0.98 }}
-              layout
+              animate={{
+                scale: isSelected ? 1.05 : 1,
+              }}
+              transition={{ type: "spring", stiffness: 200, damping: 20 }}
             >
               {plan.popular && (
                 <motion.div
@@ -86,7 +90,7 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({ onUpgrade }) => {
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.2 }}
                 >
-                  <span className="bg-foreground text-background text-xs px-3 py-1 rounded-full">
+                  <span className="bg-indigo-600 text-white text-xs px-3 py-1 rounded-full">
                     Most Popular
                   </span>
                 </motion.div>
@@ -115,10 +119,9 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({ onUpgrade }) => {
               </div>
 
               <Button
-                onClick={() => setSelectedPlan(plan.id)}
                 className={`w-full ${isSelected
-                    ? "bg-background text-foreground border border-foreground"
-                    : "bg-transparent text-foreground border border-foreground hover:bg-foreground hover:text-background"
+                    ? "bg-indigo-600 text-white border border-indigo-600 hover:bg-indigo-700 hover:text-white"
+                    : "bg-transparent text-foreground border border-foreground hover:bg-indigo-600 hover:text-white"
                   }`}
               >
                 {isSelected ? "Selected" : "Choose plan"}
@@ -126,7 +129,7 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({ onUpgrade }) => {
             </motion.div>
           )
         })}
-      </div>
+      </motion.div>
 
       <motion.div
         className="mt-10 pt-6 border-t border-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6"
@@ -136,7 +139,7 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({ onUpgrade }) => {
       >
         <div>
           <p className="text-sm text-muted-foreground">
-            Selected:{" "}
+            Selected: {" "}
             <span className="font-medium">
               {plans.find((p) => p.id === selectedPlan)?.name}
             </span>
@@ -148,12 +151,12 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({ onUpgrade }) => {
         <Button
           onClick={handleUpgrade}
           disabled={isLoading}
-          className="bg-foreground text-background hover:opacity-90 min-w-[160px]"
+          className="bg-indigo-600 text-white hover:bg-indigo-700 hover:text-white min-w-[160px]"
           size="lg"
         >
           {isLoading ? (
             <motion.div
-              className="w-4 h-4 border-2 border-background border-t-transparent rounded-full"
+              className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
               animate={{ rotate: 360 }}
               transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
             />
