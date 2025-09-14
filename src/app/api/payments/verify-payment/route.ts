@@ -7,7 +7,11 @@ export async function POST(req: NextRequest) {
   try {
     const { orderId, paymentId, signature, planId, userId } = await req.json();
 
-    // Verify Razorpay signature to ensure payment authenticity
+    if (!orderId || !paymentId || !signature || !planId || !userId) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    // Verify Razorpay signature
     const expectedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET!)
       .update(orderId + "|" + paymentId)
@@ -20,21 +24,22 @@ export async function POST(req: NextRequest) {
     const client = await clientPromise;
     const db = client.db();
 
-    // Update subscription record with payment details
+    // Update subscription record
     await db.collection("subscriptions").updateOne(
       { orderId },
       {
         $set: {
+          planId,
           paymentId,
           signature,
-          userId,
+          userId: new ObjectId(userId),
           status: "active",
           updatedAt: new Date(),
         },
       }
     );
 
-    // Update user's subscription plan - convert string ID to ObjectId for MongoDB
+    // Update user record
     await db.collection("users").updateOne(
       { _id: new ObjectId(userId) },
       {
