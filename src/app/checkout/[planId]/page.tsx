@@ -1,7 +1,6 @@
-// checkout/[planId]/page.tsx
 "use client"
 import { useParams, useRouter } from "next/navigation"
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { CreditCard } from "lucide-react"
 import { useSession } from "next-auth/react"
@@ -34,10 +33,13 @@ const plans = {
 export default function CheckoutPage() {
   const { planId } = useParams<{ planId?: string }>()
   const router = useRouter()
-  const { data: session, update } = useSession() // Added update function
+  const { data: session, update } = useSession()
   const [isPaying, setIsPaying] = useState(false)
 
-  const plan = planId ? plans[planId as keyof typeof plans] : undefined
+  const plan = useMemo(() =>
+    planId ? plans[planId as keyof typeof plans] : undefined,
+    [planId]
+  )
 
   if (!plan) {
     return <p className="p-8">Invalid plan</p>
@@ -46,7 +48,6 @@ export default function CheckoutPage() {
   const handlePayNow = async () => {
     setIsPaying(true)
     try {
-      // Create Razorpay order
       const res = await fetch("/api/payments/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -55,7 +56,6 @@ export default function CheckoutPage() {
       const data = await res.json()
       if (!data.order) throw new Error(data.error || "Order creation failed")
 
-      // Open Razorpay checkout
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID as string,
         amount: data.order.amount,
@@ -69,7 +69,6 @@ export default function CheckoutPage() {
           razorpay_signature: string
         }) => {
           try {
-            // Verify payment and update user subscription
             const verifyRes = await fetch("/api/payments/verify-payment", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -82,17 +81,18 @@ export default function CheckoutPage() {
               }),
             })
             const verifyData = await verifyRes.json()
-
             if (verifyData.success) {
-              notify("success", "Payment successful ✅")
+              if (session?.user) {
+                session.user.plan = planId as string
+              }
 
-              // Force session refresh to get updated plan
-              await update()
+              router.push("/dashboard")
 
               setTimeout(() => {
-                router.push("/dashboard")
-                router.refresh() // Ensure fresh data on dashboard
-              }, 2000)
+                notify("success", "Payment successful ✅")
+              }, 1000)
+
+              update().catch(console.error)
             } else {
               notify("error", "Payment verification failed ❌")
             }

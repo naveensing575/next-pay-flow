@@ -3,12 +3,9 @@ import GoogleProvider from "next-auth/providers/google"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { MongoDBAdapter } from "@auth/mongodb-adapter"
 import clientPromise from "@/lib/mongodb"
-import { MongoClient, ObjectId } from "mongodb"
+import { ObjectId } from "mongodb"
 import { OAuth2Client } from "google-auth-library"
 
-const client = new MongoClient(process.env.MONGODB_URI!)
-const db = client.db("nextauth")
-const users = db.collection("users")
 const googleClient = new OAuth2Client(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID)
 
 export const authOptions: NextAuthOptions = {
@@ -43,12 +40,15 @@ export const authOptions: NextAuthOptions = {
   ],
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
-    // Include subscription plan in session
     async session({ session, user }) {
       if (session.user) {
         session.user.id = user.id
 
         try {
+          const client = await clientPromise
+          const db = client.db("nextauth")
+          const users = db.collection("users")
+          
           const dbUser = await users.findOne({ _id: new ObjectId(user.id) })
           session.user.plan = dbUser?.subscription?.planId || "free"
         } catch (error) {
@@ -63,21 +63,28 @@ export const authOptions: NextAuthOptions = {
     },
   },
   events: {
-    // Initialize new users with free plan
     async createUser(message: { user: User }) {
-      await users.updateOne(
-        { _id: new ObjectId(message.user.id) },
-        {
-          $set: {
-            subscription: {
-              planId: "free",
-              status: "active",
-              updatedAt: new Date(),
+      try {
+        const client = await clientPromise
+        const db = client.db("nextauth")
+        const users = db.collection("users")
+        
+        await users.updateOne(
+          { _id: new ObjectId(message.user.id) },
+          {
+            $set: {
+              subscription: {
+                planId: "free",
+                status: "active",
+                updatedAt: new Date(),
+              },
+              createdAt: new Date(),
             },
-            createdAt: new Date(),
-          },
-        }
-      )
+          }
+        )
+      } catch (error) {
+        console.error("Error creating user subscription:", error)
+      }
     },
   },
 }

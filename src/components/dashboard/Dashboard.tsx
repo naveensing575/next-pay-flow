@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Crown, Star, Gem } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
@@ -8,6 +8,7 @@ import SubscriptionPlans from "@/components/dashboard/SubscriptionPlans"
 import Navbar from "@/components/dashboard/layout/Navbar"
 import Loader from "../ui/loader"
 import { useSession } from "next-auth/react"
+import { useSearchParams, useRouter } from "next/navigation"
 import { notify } from "@/components/notification"
 
 interface DashboardProps {
@@ -30,14 +31,37 @@ declare global {
 
 export default function Dashboard({ session }: DashboardProps) {
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [isComponentLoaded, setIsComponentLoaded] = useState(false)
   const { data: sessionData, status, update } = useSession()
+  const searchParams = useSearchParams()
+  const router = useRouter()
 
   const currentSession = sessionData || session
   const userPlan = currentSession?.user?.plan?.toLowerCase() || "free"
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsComponentLoaded(true)
+    }, 100)
+
+    return () => clearTimeout(timer)
+  }, [])
+
+  useEffect(() => {
+    if (isComponentLoaded) {
+      const paymentStatus = searchParams.get("payment")
+      if (paymentStatus === "success") {
+        setTimeout(() => {
+          notify("success", "Payment successful! 🎉")
+        }, 500)
+
+        router.replace("/dashboard", { scroll: false })
+      }
+    }
+  }, [isComponentLoaded, searchParams, router])
+
   const handleUpgrade = async (planId: string) => {
     try {
-      // Create order
       const res = await fetch("/api/payments/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -59,7 +83,6 @@ export default function Dashboard({ session }: DashboardProps) {
           razorpay_signature: string
         }) => {
           try {
-            // Verify payment
             const verifyRes = await fetch("/api/payments/verify-payment", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -72,10 +95,10 @@ export default function Dashboard({ session }: DashboardProps) {
               }),
             })
             const verifyData = await verifyRes.json()
-
             if (verifyData.success) {
-              notify("success", "Payment successful! 🎉")
-              // Refresh session to show updated plan immediately
+              setTimeout(() => {
+                notify("success", "Payment successful! 🎉")
+              }, 300)
               await update()
             } else {
               notify("error", "Payment verification failed ❌")
@@ -138,9 +161,7 @@ export default function Dashboard({ session }: DashboardProps) {
         session={currentSession}
         onLogoutStart={() => setIsLoggingOut(true)}
       />
-
       <div className="max-w-4xl mx-auto px-4 py-12">
-        {/* Welcome header */}
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
@@ -153,7 +174,6 @@ export default function Dashboard({ session }: DashboardProps) {
           {renderPlanBadge()}
         </motion.div>
 
-        {/* Subscription Plans */}
         <Card className="border-blue-200 shadow-lg">
           <CardContent className="p-6">
             <SubscriptionPlans onUpgrade={handleUpgrade} />
