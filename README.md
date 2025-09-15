@@ -10,6 +10,9 @@ A modern subscription management platform built with Next.js 15, featuring secur
 ### Dashboard Page
 <img width="744" height="508" alt="image" src="https://github.com/user-attachments/assets/3802b20f-39b1-4817-9cf6-1fd35a879d99" />
 
+<img width="696" height="509" alt="image" src="https://github.com/user-attachments/assets/5e9beb46-3a48-437a-be6c-6455a822a261" />
+
+
 ### Payment for professional plan
 <img width="902" height="482" alt="3" src="https://github.com/user-attachments/assets/449b6a09-f611-4eca-a70e-5e62f9eee154" />
 
