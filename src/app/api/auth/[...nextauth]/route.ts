@@ -23,33 +23,77 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.credential) return null
-        const ticket = await googleClient.verifyIdToken({
-          idToken: credentials.credential,
-          audience: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-        })
-        const payload = ticket.getPayload()
-        if (!payload) return null
-        return {
-          id: payload.sub,
-          email: payload.email,
-          name: payload.name,
-          image: payload.picture,
+        
+        try {
+          const ticket = await googleClient.verifyIdToken({
+            idToken: credentials.credential,
+            audience: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+          })
+          
+          const payload = ticket.getPayload()
+          if (!payload || !payload.email) return null
+
+          // Check if user exists in MongoDB and create/update
+          const client = await clientPromise
+          const db = client.db("nextauth")
+          const users = db.collection("users")
+          
+          let user = await users.findOne({ email: payload.email })
+          
+          if (!user) {
+            // Create new user with same structure as OAuth flow
+            const newUser = {
+              email: payload.email,
+              name: payload.name,
+              image: payload.picture,
+              emailVerified: new Date(), // Google emails are verified
+              subscription: {
+                planId: "free",
+                status: "active",
+                updatedAt: new Date(),
+              },
+              createdAt: new Date(),
+            }
+            
+            const result = await users.insertOne(newUser)
+            user = { ...newUser, _id: result.insertedId }
+          }
+
+          return {
+            id: user._id.toString(),
+            email: payload.email,
+            name: payload.name,
+            image: payload.picture,
+          }
+        } catch (error) {
+          console.error("Google One Tap verification error:", error)
+          return null
         }
       },
     }),
   ],
   secret: process.env.NEXTAUTH_SECRET,
+  session: {
+    strategy: "jwt", // Important: Use JWT for credentials provider
+  },
   callbacks: {
-    async session({ session, user }) {
-      if (session.user) {
-        session.user.id = user.id
+    async jwt({ token, user, account }) {
+      // Store user info in JWT for credentials provider
+      if (user) {
+        token.userId = user.id
+      }
+      return token
+    },
+    async session({ session, token }) {
+      if (session.user && token.userId) {
+        session.user.id = token.userId as string
 
         try {
           const client = await clientPromise
           const db = client.db("nextauth")
           const users = db.collection("users")
           
-          const dbUser = await users.findOne({ _id: new ObjectId(user.id) })
+          const dbUser = await users.findOne({ _id: new ObjectId(token.userId as string) })
           session.user.plan = dbUser?.subscription?.planId || "free"
         } catch (error) {
           console.error("Error fetching user subscription:", error)
@@ -58,7 +102,10 @@ export const authOptions: NextAuthOptions = {
       }
       return session
     },
-    async redirect({ baseUrl }) {
+    async redirect({ url, baseUrl }) {
+      // Always redirect to dashboard for successful logins
+      if (url.startsWith("/")) return `${baseUrl}${url}`
+      else if (new URL(url).origin === baseUrl) return url
       return `${baseUrl}/dashboard`
     },
   },
@@ -87,6 +134,10 @@ export const authOptions: NextAuthOptions = {
       }
     },
   },
+  pages: {
+    signIn: '/login',
+    error: '/login',
+  }
 }
 
 const handler = NextAuth(authOptions)
