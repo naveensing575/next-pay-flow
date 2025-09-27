@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, ArrowRight, Shield, Zap, BarChart3, Loader2 } from 'lucide-react';
-import { useOneTapLoading } from '@/components/auth/GoogleOneTap';
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -22,19 +21,15 @@ const stagger = {
 };
 
 export default function LandingPage() {
-  const [isButtonLoading, setIsButtonLoading] = useState(false);
-  const { isOneTapLoading } = useOneTapLoading();
-
-  // Either button or one tap is loading
-  const isLoading = isButtonLoading || isOneTapLoading;
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleGoogleSignIn = async () => {
-    setIsButtonLoading(true);
+    setIsLoading(true);
     try {
       await signIn("google", { callbackUrl: "/dashboard" });
     } catch (error) {
       console.error("Sign in error:", error);
-      setIsButtonLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -46,7 +41,6 @@ export default function LandingPage() {
         initial="initial"
         animate="animate"
       >
-        {/* Hero Content */}
         <motion.div className="text-white space-y-6 text-center md:text-left md:space-y-8" variants={fadeInUp}>
           <div className="space-y-4 md:space-y-6">
             <motion.div
@@ -56,14 +50,12 @@ export default function LandingPage() {
               <CheckCircle className="w-3 h-3 mr-2 sm:w-4 sm:h-4" />
               Trusted by 10,000+ businesses
             </motion.div>
-
             <motion.h1
               className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent"
               variants={fadeInUp}
             >
               Next Pay Flow
             </motion.h1>
-
             <motion.p
               className="text-sm sm:text-base md:text-lg text-gray-400 leading-relaxed max-w-xs mx-auto md:max-w-lg md:mx-0"
               variants={fadeInUp}
@@ -72,8 +64,6 @@ export default function LandingPage() {
               Experience seamless transactions and real-time analytics.
             </motion.p>
           </div>
-
-          {/* Features */}
           <motion.div className="hidden sm:block space-y-3 md:space-y-4" variants={stagger}>
             {[
               { icon: Zap, text: "Real-time processing", color: "text-blue-500" },
@@ -91,8 +81,6 @@ export default function LandingPage() {
               </motion.div>
             ))}
           </motion.div>
-
-          {/* Stats */}
           <motion.div className="grid grid-cols-3 gap-3 pt-4 sm:gap-4 md:gap-6" variants={stagger}>
             {[
               { value: "99.9%", label: "Uptime" },
@@ -111,8 +99,6 @@ export default function LandingPage() {
             ))}
           </motion.div>
         </motion.div>
-
-        {/* Sign In Card */}
         <motion.div
           className="w-full"
           variants={fadeInUp}
@@ -135,7 +121,6 @@ export default function LandingPage() {
                 </p>
               </div>
             </CardHeader>
-
             <CardContent className="space-y-4 px-4 pb-6 sm:space-y-6 sm:px-6 sm:pb-8">
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 <Button
@@ -146,9 +131,7 @@ export default function LandingPage() {
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-5 w-5 sm:mr-3 sm:h-6 sm:w-6 animate-spin" />
-                      <span className="text-sm sm:text-base">
-                        {isOneTapLoading ? "Signing you in..." : "Signing you in..."}
-                      </span>
+                      <span className="text-sm sm:text-base">Signing you in...</span>
                     </>
                   ) : (
                     <>
@@ -163,12 +146,10 @@ export default function LandingPage() {
                   )}
                 </Button>
               </motion.div>
-
               <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
                 <Shield className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span>Enterprise-grade security</span>
               </div>
-
               <div className="space-y-2 sm:space-y-3 pt-2">
                 {["Free 30-day trial", "No credit card required", "Cancel anytime"].map((benefit, index) => (
                   <div key={index} className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-300">
@@ -177,7 +158,6 @@ export default function LandingPage() {
                   </div>
                 ))}
               </div>
-
               <div className="text-center text-xs text-gray-500 pt-3 sm:pt-4 border-t border-white/10">
                 By continuing, you agree to our{' '}
                 <a href="#" className="text-blue-400 hover:text-blue-300 underline">Terms</a>
@@ -188,8 +168,6 @@ export default function LandingPage() {
           </Card>
         </motion.div>
       </motion.div>
-
-      {/* Background animation */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <motion.div
           className="absolute -top-20 -right-20 w-40 h-40 sm:w-60 sm:h-60 md:-top-40 md:-right-40 md:w-80 md:h-80 bg-blue-500/20 rounded-full filter blur-xl"
