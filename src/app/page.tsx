@@ -6,7 +6,6 @@ export default function Home() {
     <>
       <GoogleOneTap />
       <LoginPage />
-
     </>
   )
 }

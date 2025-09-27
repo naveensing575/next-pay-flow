@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, ArrowRight, Shield, Zap, BarChart3, Loader2 } from 'lucide-react';
+import { useOneTapLoading } from '@/components/auth/GoogleOneTap';
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -21,30 +22,34 @@ const stagger = {
 };
 
 export default function LandingPage() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isButtonLoading, setIsButtonLoading] = useState(false);
+  const { isOneTapLoading } = useOneTapLoading();
+
+  // Either button or one tap is loading
+  const isLoading = isButtonLoading || isOneTapLoading;
 
   const handleGoogleSignIn = async () => {
-    setIsLoading(true);
+    setIsButtonLoading(true);
     try {
       await signIn("google", { callbackUrl: "/dashboard" });
     } catch (error) {
       console.error("Sign in error:", error);
-      setIsLoading(false);
+      setIsButtonLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex flex-col justify-center px-4 py-8">
-      <motion.div 
+      <motion.div
         className="w-full max-w-sm mx-auto space-y-8 md:max-w-5xl md:grid md:grid-cols-2 md:gap-12 md:items-center md:space-y-0"
         variants={stagger}
         initial="initial"
         animate="animate"
       >
-        {/* Mobile-First Hero Content */}
+        {/* Hero Content */}
         <motion.div className="text-white space-y-6 text-center md:text-left md:space-y-8" variants={fadeInUp}>
           <div className="space-y-4 md:space-y-6">
-            <motion.div 
+            <motion.div
               className="inline-flex items-center px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs sm:text-sm"
               variants={fadeInUp}
             >
@@ -52,14 +57,14 @@ export default function LandingPage() {
               Trusted by 10,000+ businesses
             </motion.div>
 
-            <motion.h1 
+            <motion.h1
               className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent"
               variants={fadeInUp}
             >
               Next Pay Flow
             </motion.h1>
 
-            <motion.p 
+            <motion.p
               className="text-sm sm:text-base md:text-lg text-gray-400 leading-relaxed max-w-xs mx-auto md:max-w-lg md:mx-0"
               variants={fadeInUp}
             >
@@ -68,14 +73,14 @@ export default function LandingPage() {
             </motion.p>
           </div>
 
-          {/* Features - Hidden on small mobile, shown from sm up */}
+          {/* Features */}
           <motion.div className="hidden sm:block space-y-3 md:space-y-4" variants={stagger}>
             {[
               { icon: Zap, text: "Real-time processing", color: "text-blue-500" },
               { icon: Shield, text: "Advanced security", color: "text-green-500" },
               { icon: BarChart3, text: "Analytics dashboard", color: "text-purple-500" }
             ].map((feature, index) => (
-              <motion.div 
+              <motion.div
                 key={index}
                 className="flex items-center justify-center gap-3 text-gray-300 text-sm md:text-base md:justify-start"
                 variants={fadeInUp}
@@ -87,14 +92,14 @@ export default function LandingPage() {
             ))}
           </motion.div>
 
-          {/* Stats - Simplified for mobile */}
+          {/* Stats */}
           <motion.div className="grid grid-cols-3 gap-3 pt-4 sm:gap-4 md:gap-6" variants={stagger}>
             {[
               { value: "99.9%", label: "Uptime" },
               { value: "$2B+", label: "Processed" },
               { value: "50ms", label: "Response" }
             ].map((stat, index) => (
-              <motion.div 
+              <motion.div
                 key={index}
                 className="text-center"
                 variants={fadeInUp}
@@ -107,7 +112,7 @@ export default function LandingPage() {
           </motion.div>
         </motion.div>
 
-        {/* Mobile-First Sign In Card */}
+        {/* Sign In Card */}
         <motion.div
           className="w-full"
           variants={fadeInUp}
@@ -115,7 +120,7 @@ export default function LandingPage() {
         >
           <Card className="w-full bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl">
             <CardHeader className="text-center space-y-3 pb-4 sm:space-y-4 sm:pb-6">
-              <motion.div 
+              <motion.div
                 className="mx-auto w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl sm:rounded-2xl flex items-center justify-center"
                 whileHover={{ scale: 1.1, rotate: 5 }}
               >
@@ -141,7 +146,9 @@ export default function LandingPage() {
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-5 w-5 sm:mr-3 sm:h-6 sm:w-6 animate-spin" />
-                      <span className="text-sm sm:text-base">Signing you in...</span>
+                      <span className="text-sm sm:text-base">
+                        {isOneTapLoading ? "Signing you in..." : "Signing you in..."}
+                      </span>
                     </>
                   ) : (
                     <>
@@ -182,14 +189,14 @@ export default function LandingPage() {
         </motion.div>
       </motion.div>
 
-      {/* Simplified background for mobile performance */}
+      {/* Background animation */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <motion.div 
+        <motion.div
           className="absolute -top-20 -right-20 w-40 h-40 sm:w-60 sm:h-60 md:-top-40 md:-right-40 md:w-80 md:h-80 bg-blue-500/20 rounded-full filter blur-xl"
           animate={{ scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
           transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
         />
-        <motion.div 
+        <motion.div
           className="absolute -bottom-20 -left-20 w-40 h-40 sm:w-60 sm:h-60 md:-bottom-40 md:-left-40 md:w-80 md:h-80 bg-purple-500/20 rounded-full filter blur-xl"
           animate={{ scale: [1, 0.8, 1], rotate: [0, -180, -360] }}
           transition={{ duration: 25, repeat: Infinity, ease: "linear" }}

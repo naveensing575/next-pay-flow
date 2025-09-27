@@ -77,7 +77,7 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt", // Important: Use JWT for credentials provider
   },
   callbacks: {
-    async jwt({ token, user, account }) {
+    async jwt({ token, user }) {
       // Store user info in JWT for credentials provider
       if (user) {
         token.userId = user.id
