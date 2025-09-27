@@ -11,7 +11,7 @@ export default function LogoutButton({ onLogoutStart }: LogoutButtonProps) {
   const handleLogout = async () => {
     onLogoutStart?.()
     await signOut({
-      callbackUrl: "/login",
+      callbackUrl: "/",
       redirect: true,
     })
   }
