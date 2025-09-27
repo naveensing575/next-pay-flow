@@ -1,9 +1,8 @@
-import NextAuth, { type NextAuthOptions, type User } from "next-auth"
+import NextAuth, { type NextAuthOptions } from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { MongoDBAdapter } from "@auth/mongodb-adapter"
 import clientPromise from "@/lib/mongodb"
-import { ObjectId } from "mongodb"
 import { OAuth2Client } from "google-auth-library"
 
 const googleClient = new OAuth2Client(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID)
@@ -33,34 +32,8 @@ export const authOptions: NextAuthOptions = {
           const payload = ticket.getPayload()
           if (!payload || !payload.email) return null
 
-          // Check if user exists in MongoDB and create/update
-          const client = await clientPromise
-          const db = client.db("nextauth")
-          const users = db.collection("users")
-          
-          let user = await users.findOne({ email: payload.email })
-          
-          if (!user) {
-            // Create new user with same structure as OAuth flow
-            const newUser = {
-              email: payload.email,
-              name: payload.name,
-              image: payload.picture,
-              emailVerified: new Date(), // Google emails are verified
-              subscription: {
-                planId: "free",
-                status: "active",
-                updatedAt: new Date(),
-              },
-              createdAt: new Date(),
-            }
-            
-            const result = await users.insertOne(newUser)
-            user = { ...newUser, _id: result.insertedId }
-          }
-
           return {
-            id: user._id.toString(),
+            id: payload.sub,
             email: payload.email,
             name: payload.name,
             image: payload.picture,
@@ -74,64 +47,59 @@ export const authOptions: NextAuthOptions = {
   ],
   secret: process.env.NEXTAUTH_SECRET,
   session: {
-    strategy: "jwt", // Important: Use JWT for credentials provider
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60,
   },
   callbacks: {
     async jwt({ token, user }) {
-      // Store user info in JWT for credentials provider
       if (user) {
         token.userId = user.id
-      }
-      return token
-    },
-    async session({ session, token }) {
-      if (session.user && token.userId) {
-        session.user.id = token.userId as string
-
+        // Handle user creation/lookup here for better performance
         try {
           const client = await clientPromise
           const db = client.db("nextauth")
           const users = db.collection("users")
           
-          const dbUser = await users.findOne({ _id: new ObjectId(token.userId as string) })
-          session.user.plan = dbUser?.subscription?.planId || "free"
-        } catch (error) {
-          console.error("Error fetching user subscription:", error)
-          session.user.plan = "free"
-        }
-      }
-      return session
-    },
-    async redirect({ url, baseUrl }) {
-      // Always redirect to dashboard for successful logins
-      if (url.startsWith("/")) return `${baseUrl}${url}`
-      else if (new URL(url).origin === baseUrl) return url
-      return `${baseUrl}/dashboard`
-    },
-  },
-  events: {
-    async createUser(message: { user: User }) {
-      try {
-        const client = await clientPromise
-        const db = client.db("nextauth")
-        const users = db.collection("users")
-        
-        await users.updateOne(
-          { _id: new ObjectId(message.user.id) },
-          {
-            $set: {
+          const dbUser = await users.findOne({ email: user.email })
+          
+          if (!dbUser) {
+            const newUser = {
+              email: user.email,
+              name: user.name,
+              image: user.image,
+              emailVerified: new Date(),
               subscription: {
                 planId: "free",
                 status: "active",
                 updatedAt: new Date(),
               },
               createdAt: new Date(),
-            },
+            }
+            
+            const result = await users.insertOne(newUser)
+            token.plan = "free"
+            token.userId = result.insertedId.toString()
+          } else {
+            token.plan = dbUser.subscription?.planId || "free"
+            token.userId = dbUser._id.toString()
           }
-        )
-      } catch (error) {
-        console.error("Error creating user subscription:", error)
+        } catch (error) {
+          console.error("JWT callback error:", error)
+          token.plan = "free"
+        }
       }
+      return token
+    },
+    async session({ session, token }) {
+      if (session.user && token.userId) {
+        session.user.id = token.userId as string
+        session.user.plan = token.plan as string || "free"
+      }
+      return session
+    },
+    async redirect({ baseUrl }) {
+      // Simple, fast redirect
+      return `${baseUrl}/dashboard`
     },
   },
   pages: {
