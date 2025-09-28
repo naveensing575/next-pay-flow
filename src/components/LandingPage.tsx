@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, ArrowRight, Shield, Zap, BarChart3, Loader2 } from 'lucide-react';
+import GoogleOneTap from './auth/GoogleOneTap';
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -34,6 +35,8 @@ export default function LandingPage() {
   };
 
   return (
+    <>
+    <GoogleOneTap/>
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex flex-col justify-center px-4 py-8">
       <motion.div
         className="w-full max-w-sm mx-auto space-y-8 md:max-w-5xl md:grid md:grid-cols-2 md:gap-12 md:items-center md:space-y-0"
@@ -181,5 +184,6 @@ export default function LandingPage() {
         />
       </div>
     </div>
+    </>
   );
 }
