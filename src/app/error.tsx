@@ -68,7 +68,7 @@ export default function Error({
           transition={{ delay: 0.4 }}
           className="text-base text-muted-foreground mb-8 max-w-md mx-auto"
         >
-          Don't worry, this happens sometimes. Try refreshing the page or go back to the homepage.
+          Don&apos;t worry, this happens sometimes. Try refreshing the page or go back to the homepage.
         </motion.p>
 
         <motion.div

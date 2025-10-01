@@ -6,6 +6,13 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 
+// Extend jsPDF type to include autoTable plugin
+interface jsPDFWithAutoTable extends jsPDF {
+  lastAutoTable?: {
+    finalY: number
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -42,7 +49,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Generate PDF
-    const pdf = new jsPDF()
+    const pdf = new jsPDF() as jsPDFWithAutoTable
 
     // Add company logo/header
     pdf.setFontSize(24)
@@ -113,7 +120,7 @@ export async function POST(req: NextRequest) {
     })
 
     // Total section
-    const finalY = (pdf as any).lastAutoTable.finalY || 120
+    const finalY = pdf.lastAutoTable?.finalY || 120
     pdf.setFontSize(12)
     pdf.setTextColor(0, 0, 0)
     pdf.text(`Total Amount: ₹${amount} INR`, 20, finalY + 15)

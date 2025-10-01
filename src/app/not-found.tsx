@@ -36,7 +36,7 @@ export default function NotFound() {
           transition={{ delay: 0.4 }}
           className="text-lg text-muted-foreground mb-8 max-w-md mx-auto"
         >
-          Oops! The page you're looking for seems to have wandered off. Let's get you back on track.
+          Oops! The page you&apos;re looking for seems to have wandered off. Let&apos;s get you back on track.
         </motion.p>
 
         <motion.div
