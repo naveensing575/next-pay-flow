@@ -22,6 +22,7 @@ export default function Dashboard() {
   const { data: session, status, update } = useSession()
 
   useEffect(() => {
+    //pending state
     const pendingPlan = sessionStorage.getItem('pendingPlanUpdate')
     if (pendingPlan) {
       setOptimisticPlan(pendingPlan)
