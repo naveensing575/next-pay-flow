@@ -53,6 +53,7 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async jwt({ token, user, trigger }) {
+      // Initial sign in
       if (user) {
         token.userId = user.id
         
@@ -90,7 +91,8 @@ export const authOptions: NextAuthOptions = {
         }
       }
       
-      if (trigger === "update" && token.userId) {
+      // CRITICAL: Refresh token data on any update or signin trigger
+      if ((trigger === "update" || trigger === "signIn") && token.userId) {
         try {
           const client = await clientPromise
           const db = client.db("nextauth")
@@ -98,7 +100,11 @@ export const authOptions: NextAuthOptions = {
           
           const dbUser = await users.findOne({ _id: new ObjectId(token.userId as string) })
           if (dbUser) {
+            // Update all relevant fields from database
             token.plan = dbUser.subscription?.planId || "free"
+            token.name = dbUser.name
+            token.email = dbUser.email
+            token.picture = dbUser.image
           }
         } catch (error) {
           console.error("JWT update error:", error)

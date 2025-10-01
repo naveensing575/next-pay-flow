@@ -22,15 +22,20 @@ export default function Dashboard() {
   const { data: session, status, update } = useSession()
 
   useEffect(() => {
-    //pending state
     const pendingPlan = sessionStorage.getItem('pendingPlanUpdate')
     if (pendingPlan) {
       setOptimisticPlan(pendingPlan)
       notify("success", `Successfully upgraded to ${pendingPlan} plan!`)
-      sessionStorage.removeItem('pendingPlanUpdate')
 
+      // Force session update and wait for it to complete
       update().then(() => {
-        setOptimisticPlan(null)
+        // Remove from session storage after update completes
+        sessionStorage.removeItem('pendingPlanUpdate')
+
+        // Small delay to ensure UI updates
+        setTimeout(() => {
+          setOptimisticPlan(null)
+        }, 300)
       })
     }
   }, [update])
@@ -88,11 +93,14 @@ export default function Dashboard() {
             const verifyData = await verifyRes.json()
 
             if (verifyData.success) {
+              // Store pending plan update
               sessionStorage.setItem('pendingPlanUpdate', planId)
 
-              setTimeout(() => {
-                window.location.href = "/dashboard"
-              }, 500)
+              // Update session before reload
+              await update()
+
+              // Force a clean page reload to ensure all state is fresh
+              window.location.href = "/dashboard"
             } else {
               notify("error", "Payment verification failed")
             }
@@ -160,6 +168,7 @@ export default function Dashboard() {
         session={session}
         onLogoutStart={() => setIsLoggingOut(true)}
       />
+
       <div className="max-w-4xl mx-auto px-4 py-12">
         <motion.div
           initial={{ opacity: 0, y: 15 }}
@@ -172,6 +181,7 @@ export default function Dashboard() {
           </h2>
           {renderPlanBadge()}
         </motion.div>
+
         <Card className="border-blue-200 shadow-lg">
           <CardContent className="p-6">
             <SubscriptionPlans onUpgrade={handleUpgrade} />

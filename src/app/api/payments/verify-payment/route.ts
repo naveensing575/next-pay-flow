@@ -22,6 +22,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
     }
 
+    // Verify Razorpay signature
     const expectedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET!)
       .update(orderId + "|" + paymentId)
@@ -34,6 +35,7 @@ export async function POST(req: NextRequest) {
     const client = await clientPromise
     const db = client.db("nextauth")
 
+    // Update subscription collection
     await db.collection("subscriptions").updateOne(
       { orderId },
       {
@@ -49,6 +51,7 @@ export async function POST(req: NextRequest) {
       { upsert: true }
     )
 
+    // Update user's subscription in users collection
     await db.collection("users").updateOne(
       { _id: new ObjectId(userId) },
       {
@@ -58,11 +61,16 @@ export async function POST(req: NextRequest) {
             status: "active",
             updatedAt: new Date(),
           },
+          // Add this to force JWT refresh
+          lastSubscriptionUpdate: new Date(),
         },
       }
     )
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ 
+      success: true,
+      planId
+    })
   } catch (err: unknown) {
     console.error("Error in verify-payment:", err)
     return NextResponse.json({ error: "Server error" }, { status: 500 })
