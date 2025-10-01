@@ -8,7 +8,6 @@ import SubscriptionPlans from "@/components/dashboard/SubscriptionPlans"
 import Navbar from "@/components/dashboard/layout/Navbar"
 import Loader from "../ui/loader"
 import { useSession } from "next-auth/react"
-import { useSearchParams, useRouter } from "next/navigation"
 import { notify } from "@/components/notification"
 
 declare global {
@@ -19,19 +18,23 @@ declare global {
 
 export default function Dashboard() {
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [optimisticPlan, setOptimisticPlan] = useState<string | null>(null)
   const { data: session, status, update } = useSession()
-  const searchParams = useSearchParams()
-  const router = useRouter()
-
-  const userPlan = session?.user?.plan?.toLowerCase() || "free"
 
   useEffect(() => {
-    const paymentStatus = searchParams.get("payment")
-    if (paymentStatus === "success") {
-      notify("success", "Payment successful!")
-      router.replace("/dashboard", { scroll: false })
+    const pendingPlan = sessionStorage.getItem('pendingPlanUpdate')
+    if (pendingPlan) {
+      setOptimisticPlan(pendingPlan)
+      notify("success", `Successfully upgraded to ${pendingPlan} plan!`)
+      sessionStorage.removeItem('pendingPlanUpdate')
+
+      update().then(() => {
+        setOptimisticPlan(null)
+      })
     }
-  }, [searchParams, router])
+  }, [update])
+
+  const userPlan = (optimisticPlan || session?.user?.plan)?.toLowerCase() || "free"
 
   const handleUpgrade = async (planId: string) => {
     if (!window.Razorpay) {
@@ -67,6 +70,8 @@ export default function Dashboard() {
           razorpay_signature: string
         }) => {
           try {
+            notify("info", "Verifying payment...")
+
             const verifyRes = await fetch("/api/payments/verify-payment", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -82,17 +87,22 @@ export default function Dashboard() {
             const verifyData = await verifyRes.json()
 
             if (verifyData.success) {
-              notify("success", "Payment successful!")
-              await update()
+              sessionStorage.setItem('pendingPlanUpdate', planId)
+
               setTimeout(() => {
                 window.location.href = "/dashboard"
-              }, 1000)
+              }, 500)
             } else {
               notify("error", "Payment verification failed")
             }
           } catch (verifyError) {
             console.error("Payment verification error:", verifyError)
             notify("error", "Payment verification failed")
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            console.log("Payment modal closed")
           }
         },
         prefill: {

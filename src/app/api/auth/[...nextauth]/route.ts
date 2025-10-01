@@ -90,7 +90,6 @@ export const authOptions: NextAuthOptions = {
         }
       }
       
-      // Refresh plan from DB on update trigger
       if (trigger === "update" && token.userId) {
         try {
           const client = await clientPromise
@@ -98,7 +97,9 @@ export const authOptions: NextAuthOptions = {
           const users = db.collection("users")
           
           const dbUser = await users.findOne({ _id: new ObjectId(token.userId as string) })
-          token.plan = dbUser?.subscription?.planId || "free"
+          if (dbUser) {
+            token.plan = dbUser.subscription?.planId || "free"
+          }
         } catch (error) {
           console.error("JWT update error:", error)
         }
@@ -109,19 +110,7 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session.user && token.userId) {
         session.user.id = token.userId as string
-        
-        // Always fetch fresh plan from DB
-        try {
-          const client = await clientPromise
-          const db = client.db("nextauth")
-          const users = db.collection("users")
-          
-          const dbUser = await users.findOne({ _id: new ObjectId(token.userId as string) })
-          session.user.plan = dbUser?.subscription?.planId || token.plan as string || "free"
-        } catch (error) {
-          console.error("Session callback error:", error)
-          session.user.plan = token.plan as string || "free"
-        }
+        session.user.plan = token.plan as string || "free"
       }
       return session
     },
