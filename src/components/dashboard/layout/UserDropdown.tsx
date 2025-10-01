@@ -88,9 +88,14 @@ export default function UserDropdown({ session }: UserDropdownProps) {
           </Link>
         </DropdownMenuItem>
 
-        <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
-          <Settings className="w-4 h-4" />
-          <span>Settings</span>
+        <DropdownMenuItem asChild>
+          <Link
+            href="/dashboard/settings"
+            className="flex items-center gap-2 cursor-pointer"
+          >
+            <Settings className="w-4 h-4" />
+            <span>Settings</span>
+          </Link>
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />

@@ -15,7 +15,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import Navbar from "@/components/dashboard/layout/Navbar"
-import Loader from "@/components/ui/loader"
 import Link from "next/link"
 import { notify } from "@/components/notification"
 
@@ -158,7 +157,7 @@ export default function BillingPage() {
   if (status === "loading" || isLoggingOut) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-white to-blue-50 dark:from-black dark:to-gray-900 flex items-center justify-center">
-        <Loader />
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     )
   }
