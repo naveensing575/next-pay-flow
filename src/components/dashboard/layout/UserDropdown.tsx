@@ -1,6 +1,7 @@
 "use client"
 
 import Image from "next/image"
+import Link from "next/link"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,6 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import LogoutButton from "@/components/auth/LogoutButton"
 import { Session } from "next-auth"
+import { Receipt, Settings } from "lucide-react"
 
 interface UserDropdownProps {
   session: Session | null
@@ -73,6 +75,23 @@ export default function UserDropdown({ session }: UserDropdownProps) {
             {plan || "Free"}
           </Badge>
         </div>
+
+        <DropdownMenuSeparator />
+
+        <DropdownMenuItem asChild>
+          <Link
+            href="/dashboard/billing"
+            className="flex items-center gap-2 cursor-pointer"
+          >
+            <Receipt className="w-4 h-4" />
+            <span>Billing & Invoices</span>
+          </Link>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
+          <Settings className="w-4 h-4" />
+          <span>Settings</span>
+        </DropdownMenuItem>
 
         <DropdownMenuSeparator />
 
