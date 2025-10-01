@@ -82,14 +82,29 @@ src/
 ├── app/
 │   ├── api/
 │   │   ├── auth/[...nextauth]/     # NextAuth configuration
-│   │   └── payments/               # Payment API routes
-│   ├── checkout/[planId]/          # Dynamic checkout pages
+│   │   ├── payments/               # Payment API routes
+│   │   │   ├── create-order/       # Order creation
+│   │   │   ├── verify-payment/     # Payment verification
+│   │   │   ├── history/            # Payment history
+│   │   │   └── invoice/            # PDF invoice generation
+│   │   ├── user/                   # User management APIs
+│   │   │   ├── update-profile/     # Profile updates
+│   │   │   └── delete-account/     # Account deletion
+│   │   └── support/                # Support system
+│   │       └── send-message/       # Email support requests
 │   ├── dashboard/                  # User dashboard
-│   └── login/                      # Login page
+│   │   ├── billing/                # Payment history & invoices
+│   │   ├── settings/               # Account settings
+│   │   └── support/                # Support contact page
+│   ├── login/                      # Login page
+│   ├── error.tsx                   # Global error handler
+│   └── not-found.tsx               # 404 page
 ├── components/
 │   ├── auth/                       # Authentication components
 │   ├── dashboard/                  # Dashboard UI components
+│   ├── pricing/                    # Plan comparison table
 │   ├── providers/                  # React providers
+│   ├── theme/                      # Theme toggle components
 │   └── ui/                         # Reusable UI components
 └── lib/                           # Utility functions and configurations
 ```
@@ -108,17 +123,40 @@ src/
    ```
 
 3. **Environment Variables**
-   Create a `.env.local` file based on `.env.example`:
+   Create a `.env` file in the root directory with the following variables:
    ```env
-   NEXTAUTH_URL=http://localhost:3000
-   NEXTAUTH_SECRET=your-secret-key
+   # MongoDB Configuration
    MONGODB_URI=your-mongodb-connection-string
+
+   # Google OAuth (Server-side)
+   GOOGLE_CLIENT_ID=your-google-client-id
+   GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+   # Google OAuth (Client-side - Only Client ID is safe to expose)
    NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-google-client-id
-   NEXT_PUBLIC_GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+   # NextAuth Configuration
+   NEXTAUTH_SECRET=your-nextauth-secret-key
+
+   # Razorpay Configuration
    RAZORPAY_KEY_ID=your-razorpay-key-id
-   RAZORPAY_KEY_SECRET=your-razorpay-secret
+   RAZORPAY_KEY_SECRET=your-razorpay-secret-key
    NEXT_PUBLIC_RAZORPAY_KEY_ID=your-razorpay-key-id
+   RAZORPAY_WEBHOOK_SECRET=your-webhook-secret (optional)
+
+   # Email Configuration (Resend)
+   RESEND_API_KEY=your-resend-api-key
+
+   # Application Environment
+   NODE_ENV=development
    ```
+
+   **Important Notes:**
+   - Get Resend API key from: https://resend.com (Free tier: 3,000 emails/month)
+   - Get Google OAuth credentials from: https://console.cloud.google.com
+   - Get Razorpay keys from: https://dashboard.razorpay.com
+   - Never expose `GOOGLE_CLIENT_SECRET` or `RAZORPAY_KEY_SECRET` to the client
+   - Generate `NEXTAUTH_SECRET` using: `openssl rand -base64 32`
 
 4. **Run the development server**
    ```bash
