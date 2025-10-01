@@ -1,8 +1,9 @@
-import NextAuth, { type NextAuthOptions } from "next-auth"
+import NextAuth, { type NextAuthOptions, type User } from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { MongoDBAdapter } from "@auth/mongodb-adapter"
 import clientPromise from "@/lib/mongodb"
+import { ObjectId } from "mongodb"
 import { OAuth2Client } from "google-auth-library"
 
 const googleClient = new OAuth2Client(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID)
@@ -51,10 +52,10 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60,
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.userId = user.id
-        // Handle user creation/lookup here for better performance
+        
         try {
           const client = await clientPromise
           const db = client.db("nextauth")
@@ -88,18 +89,69 @@ export const authOptions: NextAuthOptions = {
           token.plan = "free"
         }
       }
+      
+      // Refresh plan from DB on update trigger
+      if (trigger === "update" && token.userId) {
+        try {
+          const client = await clientPromise
+          const db = client.db("nextauth")
+          const users = db.collection("users")
+          
+          const dbUser = await users.findOne({ _id: new ObjectId(token.userId as string) })
+          token.plan = dbUser?.subscription?.planId || "free"
+        } catch (error) {
+          console.error("JWT update error:", error)
+        }
+      }
+      
       return token
     },
     async session({ session, token }) {
       if (session.user && token.userId) {
         session.user.id = token.userId as string
-        session.user.plan = token.plan as string || "free"
+        
+        // Always fetch fresh plan from DB
+        try {
+          const client = await clientPromise
+          const db = client.db("nextauth")
+          const users = db.collection("users")
+          
+          const dbUser = await users.findOne({ _id: new ObjectId(token.userId as string) })
+          session.user.plan = dbUser?.subscription?.planId || token.plan as string || "free"
+        } catch (error) {
+          console.error("Session callback error:", error)
+          session.user.plan = token.plan as string || "free"
+        }
       }
       return session
     },
     async redirect({ baseUrl }) {
-      // Simple, fast redirect
       return `${baseUrl}/dashboard`
+    },
+  },
+  events: {
+    async createUser(message: { user: User }) {
+      try {
+        const client = await clientPromise
+        const db = client.db("nextauth")
+        const users = db.collection("users")
+        
+        await users.updateOne(
+          { _id: new ObjectId(message.user.id) },
+          {
+            $set: {
+              subscription: {
+                planId: "free",
+                status: "active",
+                updatedAt: new Date(),
+              },
+              createdAt: new Date(),
+            },
+          }
+        )
+      } catch (error) {
+        console.error("Error creating user subscription:", error)
+      }
     },
   },
   pages: {

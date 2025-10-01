@@ -10,19 +10,15 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 import LogoutButton from "@/components/auth/LogoutButton"
+import { Session } from "next-auth"
 
 interface UserDropdownProps {
-  session: {
-    user: {
-      name?: string | null
-      email?: string | null
-      image?: string | null
-      plan?: string | null
-    }
-  }
+  session: Session | null
 }
 
 export default function UserDropdown({ session }: UserDropdownProps) {
+  if (!session?.user) return null
+
   const { name, email, image, plan } = session.user
 
   return (
@@ -46,7 +42,6 @@ export default function UserDropdown({ session }: UserDropdownProps) {
       </DropdownMenuTrigger>
 
       <DropdownMenuContent className="w-72 p-4 space-y-4 rounded-xl shadow-lg">
-        {/* User Info */}
         <div className="flex items-center space-x-3">
           {image ? (
             <Image
@@ -69,7 +64,6 @@ export default function UserDropdown({ session }: UserDropdownProps) {
 
         <DropdownMenuSeparator />
 
-        {/* Plan Info */}
         <div className="flex flex-col space-y-1 text-sm">
           <span className="text-muted-foreground">Current Plan</span>
           <Badge
@@ -82,7 +76,6 @@ export default function UserDropdown({ session }: UserDropdownProps) {
 
         <DropdownMenuSeparator />
 
-        {/* Logout */}
         <DropdownMenuItem asChild className="p-0">
           <LogoutButton />
         </DropdownMenuItem>

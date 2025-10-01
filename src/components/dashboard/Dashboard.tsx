@@ -11,62 +11,46 @@ import { useSession } from "next-auth/react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { notify } from "@/components/notification"
 
-interface DashboardProps {
-  session: {
-    user: {
-      id?: string
-      name?: string | null
-      email?: string | null
-      image?: string | null
-      plan?: string | null
-    }
-  }
-}
-
 declare global {
   interface Window {
     Razorpay: new (options: unknown) => { open: () => void }
   }
 }
 
-export default function Dashboard({ session }: DashboardProps) {
+export default function Dashboard() {
   const [isLoggingOut, setIsLoggingOut] = useState(false)
-  const [isComponentLoaded, setIsComponentLoaded] = useState(false)
-  const { data: sessionData, status, update } = useSession()
+  const { data: session, status, update } = useSession()
   const searchParams = useSearchParams()
   const router = useRouter()
 
-  const currentSession = sessionData || session
-  const userPlan = currentSession?.user?.plan?.toLowerCase() || "free"
+  const userPlan = session?.user?.plan?.toLowerCase() || "free"
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsComponentLoaded(true)
-    }, 100)
-
-    return () => clearTimeout(timer)
-  }, [])
-
-  useEffect(() => {
-    if (isComponentLoaded) {
-      const paymentStatus = searchParams.get("payment")
-      if (paymentStatus === "success") {
-        setTimeout(() => {
-          notify("success", "Payment successful! 🎉")
-        }, 500)
-
-        router.replace("/dashboard", { scroll: false })
-      }
+    const paymentStatus = searchParams.get("payment")
+    if (paymentStatus === "success") {
+      notify("success", "Payment successful!")
+      router.replace("/dashboard", { scroll: false })
     }
-  }, [isComponentLoaded, searchParams, router])
+  }, [searchParams, router])
 
   const handleUpgrade = async (planId: string) => {
+    if (!window.Razorpay) {
+      notify("error", "Payment system not loaded")
+      return
+    }
+
+    if (!session?.user?.id) {
+      notify("error", "Please log in again")
+      return
+    }
+
     try {
       const res = await fetch("/api/payments/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ planId }),
       })
+
       const data = await res.json()
       if (!data.order) throw new Error(data.error || "Order creation failed")
 
@@ -91,34 +75,38 @@ export default function Dashboard({ session }: DashboardProps) {
                 paymentId: response.razorpay_payment_id,
                 signature: response.razorpay_signature,
                 planId,
-                userId: currentSession?.user?.id,
+                userId: session?.user?.id,
               }),
             })
+
             const verifyData = await verifyRes.json()
+
             if (verifyData.success) {
-              setTimeout(() => {
-                notify("success", "Payment successful! 🎉")
-              }, 300)
+              notify("success", "Payment successful!")
               await update()
+              setTimeout(() => {
+                window.location.href = "/dashboard"
+              }, 1000)
             } else {
-              notify("error", "Payment verification failed ❌")
+              notify("error", "Payment verification failed")
             }
           } catch (verifyError) {
             console.error("Payment verification error:", verifyError)
-            notify("error", "Payment verification failed ❌")
+            notify("error", "Payment verification failed")
           }
         },
         prefill: {
-          name: currentSession?.user?.name || "User",
-          email: currentSession?.user?.email || "test@example.com",
+          name: session?.user?.name || "User",
+          email: session?.user?.email || "",
         },
         theme: { color: "#2563eb" },
       }
+
       const rzp = new window.Razorpay(options)
       rzp.open()
     } catch (err) {
       console.error("Error upgrading:", err)
-      notify("error", "Something went wrong ❌")
+      notify("error", "Something went wrong")
     }
   }
 
@@ -158,7 +146,7 @@ export default function Dashboard({ session }: DashboardProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-white to-blue-50 dark:from-black dark:to-gray-900">
       <Navbar
-        session={currentSession}
+        session={session}
         onLogoutStart={() => setIsLoggingOut(true)}
       />
       <div className="max-w-4xl mx-auto px-4 py-12">
@@ -169,11 +157,10 @@ export default function Dashboard({ session }: DashboardProps) {
           className="mb-10 flex items-center justify-between"
         >
           <h2 className="text-3xl font-bold">
-            Welcome, {currentSession?.user?.name?.split(" ")[0] || "User"}
+            Welcome, {session?.user?.name?.split(" ")[0] || "User"}
           </h2>
           {renderPlanBadge()}
         </motion.div>
-
         <Card className="border-blue-200 shadow-lg">
           <CardContent className="p-6">
             <SubscriptionPlans onUpgrade={handleUpgrade} />

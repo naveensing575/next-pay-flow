@@ -1,19 +1,12 @@
 "use client"
-
 import { motion } from "framer-motion"
 import { CreditCard } from "lucide-react"
 import { ThemeToggle } from "@/components/theme/theme-toggle"
 import UserDropdown from "./UserDropdown"
+import { Session } from "next-auth"
 
 interface NavbarProps {
-  session: {
-    user: {
-      name?: string | null
-      email?: string | null
-      image?: string | null
-      plan?: string | null
-    }
-  }
+  session: Session | null
   onLogoutStart?: () => void
 }
 
@@ -33,7 +26,6 @@ export default function Navbar({ session }: NavbarProps) {
             </div>
             <h1 className="text-sm font-bold">Next Pay Flow</h1>
           </motion.div>
-
           <div className="flex items-center space-x-4">
             <ThemeToggle />
             <UserDropdown session={session} />

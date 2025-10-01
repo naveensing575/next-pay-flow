@@ -1,30 +1,39 @@
-import { NextRequest, NextResponse } from "next/server";
-import crypto from "crypto";
-import clientPromise from "@/lib/mongodb";
-import { ObjectId } from "mongodb";
+import { NextRequest, NextResponse } from "next/server"
+import crypto from "crypto"
+import clientPromise from "@/lib/mongodb"
+import { ObjectId } from "mongodb"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/app/api/auth/[...nextauth]/route"
 
 export async function POST(req: NextRequest) {
   try {
-    const { orderId, paymentId, signature, planId, userId } = await req.json();
-
-    if (!orderId || !paymentId || !signature || !planId || !userId) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Verify Razorpay signature for security
+    const { orderId, paymentId, signature, planId, userId } = await req.json()
+
+    if (!orderId || !paymentId || !signature || !planId || !userId) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+    }
+
+    if (session.user.id !== userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
+    }
+
     const expectedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET!)
       .update(orderId + "|" + paymentId)
-      .digest("hex");
+      .digest("hex")
 
     if (expectedSignature !== signature) {
-      return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+      return NextResponse.json({ error: "Invalid signature" }, { status: 400 })
     }
 
-    const client = await clientPromise;
-    const db = client.db();
+    const client = await clientPromise
+    const db = client.db("nextauth")
 
-    // Update subscription record with payment details
     await db.collection("subscriptions").updateOne(
       { orderId },
       {
@@ -36,10 +45,10 @@ export async function POST(req: NextRequest) {
           status: "active",
           updatedAt: new Date(),
         },
-      }
-    );
+      },
+      { upsert: true }
+    )
 
-    // Update user's subscription plan - this is what the session callback reads
     await db.collection("users").updateOne(
       { _id: new ObjectId(userId) },
       {
@@ -51,11 +60,11 @@ export async function POST(req: NextRequest) {
           },
         },
       }
-    );
+    )
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true })
   } catch (err: unknown) {
-    console.error("Error in verify-payment:", err);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    console.error("Error in verify-payment:", err)
+    return NextResponse.json({ error: "Server error" }, { status: 500 })
   }
 }
