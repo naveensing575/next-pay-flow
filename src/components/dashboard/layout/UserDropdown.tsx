@@ -2,6 +2,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
+import { motion } from "framer-motion"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,18 +27,54 @@ export default function UserDropdown({ session }: UserDropdownProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring">
+        <button className="rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring relative overflow-hidden">
           {image ? (
-            <Image
-              src={image}
-              alt={name || "User"}
-              width={36}
-              height={36}
-              className="rounded-full border border-border"
-            />
+            <>
+              <Image
+                src={image}
+                alt={name || "User"}
+                width={36}
+                height={36}
+                className="rounded-full border border-border"
+              />
+              {/* Shimmer animation overlay */}
+              <motion.div
+                className="absolute inset-0 pointer-events-none rounded-full"
+                initial={{ x: "-100%", y: "-100%" }}
+                animate={{ x: "100%", y: "100%" }}
+                transition={{
+                  repeat: Infinity,
+                  duration: 2,
+                  ease: "linear",
+                  repeatDelay: 2,
+                }}
+                style={{
+                  background: "linear-gradient(135deg, transparent 30%, rgba(255, 255, 255, 0.8) 50%, transparent 70%)",
+                  width: "150%",
+                  height: "150%",
+                }}
+              />
+            </>
           ) : (
-            <div className="w-9 h-9 flex items-center justify-center rounded-full bg-muted text-sm font-semibold">
+            <div className="w-9 h-9 flex items-center justify-center rounded-full bg-muted text-sm font-semibold relative">
               {name?.[0] || "U"}
+              {/* Shimmer animation overlay */}
+              <motion.div
+                className="absolute inset-0 pointer-events-none rounded-full"
+                initial={{ x: "-100%", y: "-100%" }}
+                animate={{ x: "100%", y: "100%" }}
+                transition={{
+                  repeat: Infinity,
+                  duration: 2,
+                  ease: "linear",
+                  repeatDelay: 2,
+                }}
+                style={{
+                  background: "linear-gradient(135deg, transparent 30%, rgba(255, 255, 255, 0.8) 50%, transparent 70%)",
+                  width: "150%",
+                  height: "150%",
+                }}
+              />
             </div>
           )}
         </button>

@@ -98,7 +98,7 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({ onUpgrade }) => {
 
               <div className="text-center mb-6">
                 <h3 className="text-lg font-semibold mb-2">{plan.name}</h3>
-                <div className="text-4xl font-bold mb-1">${plan.price}.00</div>
+                <div className="text-4xl font-bold mb-1">₹{plan.price}.00</div>
                 <p className="text-muted-foreground">per month</p>
               </div>
 
@@ -145,7 +145,7 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({ onUpgrade }) => {
             </span>
           </p>
           <p className="text-2xl font-bold">
-            ${plans.find((p) => p.id === selectedPlan)?.price}.00/month
+            ₹{plans.find((p) => p.id === selectedPlan)?.price}.00/month
           </p>
         </div>
         <Button

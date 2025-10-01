@@ -10,6 +10,7 @@ import Loader from "../ui/loader"
 import { useSession } from "next-auth/react"
 import { notify } from "@/components/notification"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 
 declare global {
   interface Window {
@@ -139,26 +140,26 @@ export default function Dashboard() {
     switch (userPlan) {
       case "basic":
         return (
-          <Badge className="bg-yellow-500 text-white">
-            <Star className="w-3 h-3 mr-1" /> Basic
+          <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 text-sm sm:text-base shadow-md">
+            <Star className="w-4 h-4 mr-2" /> Basic Plan
           </Badge>
         )
       case "professional":
         return (
-          <Badge className="bg-blue-600 text-white">
-            <Crown className="w-3 h-3 mr-1" /> Professional
+          <Badge className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm sm:text-base shadow-md">
+            <Crown className="w-4 h-4 mr-2" /> Professional Plan
           </Badge>
         )
       case "business":
         return (
-          <Badge className="bg-purple-600 text-white">
-            <Gem className="w-3 h-3 mr-1" /> Business
+          <Badge className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 text-sm sm:text-base shadow-md">
+            <Gem className="w-4 h-4 mr-2" /> Business Plan
           </Badge>
         )
       default:
         return (
-          <Badge className="bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
-            <Gem className="w-3 h-3 mr-1" /> Free
+          <Badge className="bg-gray-200 hover:bg-gray-300 text-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 px-4 py-2 text-sm sm:text-base shadow-md">
+            <Gem className="w-4 h-4 mr-2" /> Free Plan
           </Badge>
         )
     }
@@ -171,24 +172,115 @@ export default function Dashboard() {
         onLogoutStart={() => setIsLoggingOut(true)}
       />
 
-      <div className="max-w-4xl mx-auto px-4 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        {/* User Profile Header */}
         <motion.div
-          initial={{ opacity: 0, y: 15 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="mb-10 flex items-center justify-between"
+          className="mb-8"
         >
-          <h2 className="text-3xl font-bold">
-            Welcome, {session?.user?.name?.split(" ")[0] || "User"}
-          </h2>
-          {renderPlanBadge()}
+          <Card className="border-border shadow-lg overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800">
+            <CardContent className="p-6 sm:p-8">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+                {/* Left Section - Profile Info */}
+                <div className="flex items-center gap-4 sm:gap-6">
+                  {/* Profile Picture */}
+                  <div className="relative">
+                    {session?.user?.image ? (
+                      <motion.div
+                        className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden ring-4 ring-white dark:ring-gray-700 shadow-lg"
+                        whileHover={{ scale: 1.05 }}
+                        transition={{ type: "spring", stiffness: 300 }}
+                      >
+                        <Image
+                          src={session.user.image}
+                          alt={session.user.name || "User"}
+                          width={80}
+                          height={80}
+                          className="w-full h-full object-cover"
+                        />
+                        {/* Shimmer overlay */}
+                        <motion.div
+                          className="absolute inset-0 pointer-events-none"
+                          initial={{ x: "-100%", y: "-100%" }}
+                          animate={{ x: "100%", y: "100%" }}
+                          transition={{
+                            repeat: Infinity,
+                            duration: 2,
+                            ease: "linear",
+                            repeatDelay: 2,
+                          }}
+                          style={{
+                            background: "linear-gradient(135deg, transparent 30%, rgba(255, 255, 255, 0.8) 50%, transparent 70%)",
+                            width: "150%",
+                            height: "150%",
+                          }}
+                        />
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-2xl sm:text-3xl font-bold ring-4 ring-white dark:ring-gray-700 shadow-lg overflow-hidden"
+                        whileHover={{ scale: 1.05 }}
+                        transition={{ type: "spring", stiffness: 300 }}
+                      >
+                        {session?.user?.name?.[0]?.toUpperCase() || "U"}
+                        {/* Shimmer overlay */}
+                        <motion.div
+                          className="absolute inset-0 pointer-events-none"
+                          initial={{ x: "-100%", y: "-100%" }}
+                          animate={{ x: "100%", y: "100%" }}
+                          transition={{
+                            repeat: Infinity,
+                            duration: 2,
+                            ease: "linear",
+                            repeatDelay: 2,
+                          }}
+                          style={{
+                            background: "linear-gradient(135deg, transparent 30%, rgba(255, 255, 255, 0.8) 50%, transparent 70%)",
+                            width: "150%",
+                            height: "150%",
+                          }}
+                        />
+                      </motion.div>
+                    )}
+                  </div>
+
+                  {/* User Details */}
+                  <div className="flex flex-col gap-1">
+                    <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+                      Welcome back, {session?.user?.name?.split(" ")[0] || "User"}!
+                    </h2>
+                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
+                      {session?.user?.email}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Right Section - Plan Badge */}
+                <div className="flex flex-col items-start sm:items-end gap-2 w-full sm:w-auto">
+                  <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 font-medium">
+                    Current Plan
+                  </span>
+                  {renderPlanBadge()}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </motion.div>
 
-        <Card className="border-blue-200 shadow-lg">
-          <CardContent className="p-6">
-            <SubscriptionPlans onUpgrade={handleUpgrade} />
-          </CardContent>
-        </Card>
+        {/* Subscription Plans Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <Card className="border-border shadow-lg">
+            <CardContent className="p-4 sm:p-6 lg:p-8">
+              <SubscriptionPlans onUpgrade={handleUpgrade} />
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     </div>
   )
