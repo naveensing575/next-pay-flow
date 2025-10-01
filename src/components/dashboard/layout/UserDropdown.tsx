@@ -12,7 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import LogoutButton from "@/components/auth/LogoutButton"
 import { Session } from "next-auth"
-import { Receipt, Settings } from "lucide-react"
+import { Receipt, Settings, MessageSquare } from "lucide-react"
 
 interface UserDropdownProps {
   session: Session | null
@@ -95,6 +95,16 @@ export default function UserDropdown({ session }: UserDropdownProps) {
           >
             <Settings className="w-4 h-4" />
             <span>Settings</span>
+          </Link>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem asChild>
+          <Link
+            href="/dashboard/support"
+            className="flex items-center gap-2 cursor-pointer"
+          >
+            <MessageSquare className="w-4 h-4" />
+            <span>Support</span>
           </Link>
         </DropdownMenuItem>
 

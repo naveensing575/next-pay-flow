@@ -34,12 +34,28 @@ A modern subscription management platform built with Next.js 15, featuring secur
   - Secure payment verification with HMAC signature validation
   - Multiple subscription plans (Basic, Professional, Business)
   - Real-time payment status updates
+  - Payment history with invoice generation
+  - PDF invoice downloads for completed transactions
 
 - **Dashboard & UI**
   - Modern, responsive dashboard with Framer Motion animations
   - Dark/Light theme support
   - Real-time subscription status display
   - Account management interface
+  - Custom error pages (404, 500)
+  - Interactive plan comparison table
+
+- **User Management**
+  - Account settings page with profile updates
+  - Subscription management and billing history
+  - Account deletion with GDPR compliance
+  - User preferences management
+
+- **Support System**
+  - Beautiful contact form with glass morphism design
+  - Email notifications via Resend
+  - User information auto-populated in support requests
+  - Direct email communication channel
 
 - **Database Integration**
   - MongoDB for user and subscription data
@@ -48,13 +64,16 @@ A modern subscription management platform built with Next.js 15, featuring secur
 
 ## Tech Stack
 
-- **Frontend**: Next.js 14, React, TypeScript, Tailwind CSS
+- **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS 4
 - **Animation**: Framer Motion
 - **Authentication**: NextAuth.js with Google OAuth
 - **Database**: MongoDB with official Node.js driver
 - **Payments**: Razorpay
+- **Email**: Resend for transactional emails
+- **PDF Generation**: jsPDF with jsPDF-AutoTable
 - **UI Components**: Shadcn/ui, Lucide React icons
 - **Styling**: Tailwind CSS with custom theme support
+- **Notifications**: Sonner for toast notifications
 
 ## Project Structure
 
