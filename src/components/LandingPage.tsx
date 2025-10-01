@@ -24,6 +24,7 @@ const stagger = {
 export default function LandingPage() {
   const [isLoading, setIsLoading] = useState(false);
 
+  // handle google login
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
