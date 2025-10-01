@@ -192,10 +192,22 @@ src/
 
 ## API Endpoints
 
+### Authentication
+- `/api/auth/*` - NextAuth endpoints (sign in, sign out, session)
+
+### Payments
 - `POST /api/payments/create-order` - Create Razorpay order
 - `POST /api/payments/verify-payment` - Verify and process payment
+- `GET /api/payments/history` - Get user payment history
+- `POST /api/payments/invoice` - Generate and download PDF invoice
 - `POST /api/payments/webhook` - Handle Razorpay webhooks
-- `/api/auth/*` - NextAuth endpoints
+
+### User Management
+- `POST /api/user/update-profile` - Update user profile information
+- `DELETE /api/user/delete-account` - Delete user account (GDPR compliant)
+
+### Support
+- `POST /api/support/send-message` - Send support request via email
 
 ## Deployment
 
