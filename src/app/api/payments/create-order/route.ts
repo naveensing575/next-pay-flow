@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { razorpay } from "@/lib/razorpay";
 import clientPromise from "@/lib/mongodb";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export async function POST(req: NextRequest) {
   try {
+    // Verify user is authenticated
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { planId } = await req.json();
     if (!planId) {
       return NextResponse.json({ error: "Plan ID required" }, { status: 400 });
@@ -35,6 +43,7 @@ export async function POST(req: NextRequest) {
     await db.collection("subscriptions").insertOne({
       planId,
       orderId: order.id,
+      userId: session.user.id,
       status: "created",
       createdAt: new Date(),
     });

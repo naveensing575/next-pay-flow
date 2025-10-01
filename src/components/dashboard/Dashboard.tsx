@@ -9,6 +9,7 @@ import Navbar from "@/components/dashboard/layout/Navbar"
 import Loader from "../ui/loader"
 import { useSession } from "next-auth/react"
 import { notify } from "@/components/notification"
+import { useRouter } from "next/navigation"
 
 declare global {
   interface Window {
@@ -20,6 +21,7 @@ export default function Dashboard() {
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [optimisticPlan, setOptimisticPlan] = useState<string | null>(null)
   const { data: session, status, update } = useSession()
+  const router = useRouter()
 
   useEffect(() => {
     const pendingPlan = sessionStorage.getItem('pendingPlanUpdate')
@@ -96,11 +98,11 @@ export default function Dashboard() {
               // Store pending plan update
               sessionStorage.setItem('pendingPlanUpdate', planId)
 
-              // Update session before reload
+              // Update session and refresh
               await update()
 
-              // Force a clean page reload to ensure all state is fresh
-              window.location.href = "/dashboard"
+              // Use router.refresh() for better performance
+              router.refresh()
             } else {
               notify("error", "Payment verification failed")
             }

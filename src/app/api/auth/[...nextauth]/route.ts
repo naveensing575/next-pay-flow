@@ -6,14 +6,14 @@ import clientPromise from "@/lib/mongodb"
 import { ObjectId } from "mongodb"
 import { OAuth2Client } from "google-auth-library"
 
-const googleClient = new OAuth2Client(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID)
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 
 export const authOptions: NextAuthOptions = {
   adapter: MongoDBAdapter(clientPromise),
   providers: [
     GoogleProvider({
-      clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET!,
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
     CredentialsProvider({
       id: "google-onetap",
@@ -23,11 +23,11 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.credential) return null
-        
+
         try {
           const ticket = await googleClient.verifyIdToken({
             idToken: credentials.credential,
-            audience: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+            audience: process.env.GOOGLE_CLIENT_ID,
           })
           
           const payload = ticket.getPayload()
