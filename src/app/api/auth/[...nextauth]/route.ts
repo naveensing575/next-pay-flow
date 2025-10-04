@@ -1,7 +1,6 @@
-import NextAuth, { type NextAuthOptions, type User } from "next-auth"
+import NextAuth, { type NextAuthOptions } from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
 import CredentialsProvider from "next-auth/providers/credentials"
-import { MongoDBAdapter } from "@auth/mongodb-adapter"
 import clientPromise from "@/lib/mongodb"
 import { ObjectId } from "mongodb"
 import { OAuth2Client } from "google-auth-library"
@@ -9,7 +8,6 @@ import { OAuth2Client } from "google-auth-library"
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 
 export const authOptions: NextAuthOptions = {
-  adapter: MongoDBAdapter(clientPromise),
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -52,19 +50,20 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60,
   },
   callbacks: {
-    async jwt({ token, user, trigger }) {
-      // Initial sign in
+    async jwt({ token, user, account, trigger }) {
+      // Initial sign in - handle both OAuth (Google button) and Credentials (One Tap)
       if (user) {
-        token.userId = user.id
-        
         try {
           const client = await clientPromise
           const db = client.db("nextauth")
           const users = db.collection("users")
-          
+          const accounts = db.collection("accounts")
+
+          // Find existing user by email
           const dbUser = await users.findOne({ email: user.email })
-          
+
           if (!dbUser) {
+            // Create new user
             const newUser = {
               email: user.email,
               name: user.name,
@@ -77,27 +76,68 @@ export const authOptions: NextAuthOptions = {
               },
               createdAt: new Date(),
             }
-            
+
             const result = await users.insertOne(newUser)
             token.plan = "free"
             token.userId = result.insertedId.toString()
+
+            // If OAuth login, store account info for future reference
+            if (account && account.provider === "google") {
+              await accounts.insertOne({
+                userId: result.insertedId,
+                type: account.type,
+                provider: account.provider,
+                providerAccountId: account.providerAccountId,
+                access_token: account.access_token,
+                expires_at: account.expires_at,
+                refresh_token: account.refresh_token,
+                token_type: account.token_type,
+                scope: account.scope,
+                id_token: account.id_token,
+              })
+            }
           } else {
+            // Existing user
             token.plan = dbUser.subscription?.planId || "free"
             token.userId = dbUser._id.toString()
+
+            // If OAuth login and account doesn't exist, link it
+            if (account && account.provider === "google") {
+              const existingAccount = await accounts.findOne({
+                userId: dbUser._id,
+                provider: account.provider,
+              })
+
+              if (!existingAccount) {
+                await accounts.insertOne({
+                  userId: dbUser._id,
+                  type: account.type,
+                  provider: account.provider,
+                  providerAccountId: account.providerAccountId,
+                  access_token: account.access_token,
+                  expires_at: account.expires_at,
+                  refresh_token: account.refresh_token,
+                  token_type: account.token_type,
+                  scope: account.scope,
+                  id_token: account.id_token,
+                })
+              }
+            }
           }
         } catch (error) {
           console.error("JWT callback error:", error)
           token.plan = "free"
+          token.userId = user.id
         }
       }
-      
+
       // CRITICAL: Refresh token data on any update or signin trigger
       if ((trigger === "update" || trigger === "signIn") && token.userId) {
         try {
           const client = await clientPromise
           const db = client.db("nextauth")
           const users = db.collection("users")
-          
+
           const dbUser = await users.findOne({ _id: new ObjectId(token.userId as string) })
           if (dbUser) {
             // Update all relevant fields from database
@@ -110,7 +150,7 @@ export const authOptions: NextAuthOptions = {
           console.error("JWT update error:", error)
         }
       }
-      
+
       return token
     },
     async session({ session, token }) {
@@ -122,31 +162,6 @@ export const authOptions: NextAuthOptions = {
     },
     async redirect({ baseUrl }) {
       return `${baseUrl}/dashboard`
-    },
-  },
-  events: {
-    async createUser(message: { user: User }) {
-      try {
-        const client = await clientPromise
-        const db = client.db("nextauth")
-        const users = db.collection("users")
-        
-        await users.updateOne(
-          { _id: new ObjectId(message.user.id) },
-          {
-            $set: {
-              subscription: {
-                planId: "free",
-                status: "active",
-                updatedAt: new Date(),
-              },
-              createdAt: new Date(),
-            },
-          }
-        )
-      } catch (error) {
-        console.error("Error creating user subscription:", error)
-      }
     },
   },
   pages: {
