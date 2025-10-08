@@ -3,7 +3,7 @@ import { razorpay } from "@/lib/razorpay";
 import clientPromise from "@/lib/mongodb";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { rateLimit, createOrderLimiter } from "@/lib/rate-limit";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Rate limiting by user ID (better than IP for authenticated endpoints)
-    const rateLimitResponse = await rateLimit(session.user.id, createOrderLimiter);
+    const rateLimitResponse = await rateLimit(session.user.id, "createOrder");
     if (rateLimitResponse) {
       return rateLimitResponse;
     }

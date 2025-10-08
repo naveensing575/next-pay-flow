@@ -1,40 +1,65 @@
-import { RateLimiterMemory } from "rate-limiter-flexible";
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
 import { NextResponse } from "next/server";
 
-const createOrderLimiter = new RateLimiterMemory({
-  points: 5, //number of requests
-  duration: 60, //time in seconds
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
 });
 
-const verifyPaymentLimiter = new RateLimiterMemory({
-  points: 10,
-  duration: 60,
+const createOrderLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(5, "60 s"),
+  analytics: true,
+  prefix: "@ratelimit/createOrder",
 });
 
-const webhookLimiter = new RateLimiterMemory({
-  points: 100,
-  duration: 60,
+const verifyPaymentLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(10, "60 s"),
+  analytics: true,
+  prefix: "@ratelimit/verifyPayment",
 });
+
+const webhookLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(100, "60 s"),
+  analytics: true,
+  prefix: "@ratelimit/webhook",
+});
+
+const limiters = {
+  createOrder: createOrderLimiter,
+  verifyPayment: verifyPaymentLimiter,
+  webhook: webhookLimiter,
+};
 
 export async function rateLimit(
   identifier: string,
-  limiter: RateLimiterMemory
+  limitType: keyof typeof limiters
 ): Promise<NextResponse | null> {
   try {
-    await limiter.consume(identifier);
+    const limiter = limiters[limitType];
+    const { success, reset } = await limiter.limit(identifier);
+
+    if (!success) {
+      const retryAfter = Math.ceil((reset - Date.now()) / 1000);
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": retryAfter.toString(),
+            "X-RateLimit-Limit": limiter.limit.toString(),
+            "X-RateLimit-Reset": reset.toString(),
+          },
+        }
+      );
+    }
+
     return null;
   } catch (error) {
-    console.error(error)
-    return NextResponse.json(
-      { error: "Too many requests. Please try again later." },
-      {
-        status: 429,
-        headers: {
-          "Retry-After": "60",
-        }
-      }
-    );
+    console.error("Rate limit error:", error);
+    return null;
   }
 }
-
-export { createOrderLimiter, verifyPaymentLimiter, webhookLimiter };

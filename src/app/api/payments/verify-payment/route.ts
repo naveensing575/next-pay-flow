@@ -4,7 +4,7 @@ import clientPromise from "@/lib/mongodb"
 import { ObjectId } from "mongodb"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/app/api/auth/[...nextauth]/route"
-import { rateLimit, verifyPaymentLimiter } from "@/lib/rate-limit"
+import { rateLimit } from "@/lib/rate-limit"
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Rate limiting by user ID (better than IP for authenticated endpoints)
-    const rateLimitResponse = await rateLimit(session.user.id, verifyPaymentLimiter);
+    const rateLimitResponse = await rateLimit(session.user.id, "verifyPayment");
     if (rateLimitResponse) {
       return rateLimitResponse;
     }

@@ -75,7 +75,7 @@ A modern subscription management platform built with Next.js 15, featuring secur
 - **UI Components**: Shadcn/ui, Lucide React icons
 - **Styling**: Tailwind CSS with custom theme support
 - **Notifications**: Sonner for toast notifications
-- **Rate Limiting**: rate-limiter-flexible for API protection
+- **Rate Limiting**: Upstash Redis with @upstash/ratelimit for production-grade API protection
 
 ## Project Structure
 
@@ -151,6 +151,10 @@ src/
    # Email Configuration (Resend)
    RESEND_API_KEY=your-resend-api-key
 
+   # Upstash Redis Configuration (for Rate Limiting)
+   UPSTASH_REDIS_REST_URL=your-upstash-redis-url
+   UPSTASH_REDIS_REST_TOKEN=your-upstash-redis-token
+
    # Application Environment
    NODE_ENV=development
    ```
@@ -159,8 +163,15 @@ src/
    - Get Resend API key from: https://resend.com (Free tier: 3,000 emails/month)
    - Get Google OAuth credentials from: https://console.cloud.google.com
    - Get Razorpay keys from: https://dashboard.razorpay.com
+   - Get Upstash Redis credentials from: https://upstash.com (Free tier: 10,000 requests/day)
    - Never expose `GOOGLE_CLIENT_SECRET` or `RAZORPAY_KEY_SECRET` to the client
    - Generate `NEXTAUTH_SECRET` using: `openssl rand -base64 32`
+
+   **Setting up Upstash Redis:**
+   1. Go to https://upstash.com and create a free account
+   2. Create a new Redis database (select any region close to you)
+   3. Copy the `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` from the database details
+   4. Add them to your `.env` file
 
 4. **Run the development server**
    ```bash
@@ -193,14 +204,17 @@ src/
 - Payment signature verification
 - Environment variable protection for sensitive data
 - Secure API route implementations
-- Advanced rate limiting with `rate-limiter-flexible`
-  - User-based rate limiting for authenticated endpoints
-  - IP-based rate limiting for public endpoints
+- Production-grade rate limiting with Upstash Redis
+  - **Serverless-compatible** - Works perfectly in Vercel/Netlify/AWS Lambda
+  - **User-based rate limiting** for authenticated endpoints (prevents per-user abuse)
+  - **IP-based rate limiting** for public endpoints (webhook protection)
+  - **Sliding window algorithm** - More accurate than fixed windows
   - Configurable limits per endpoint:
     - Create Order: 5 requests/minute per user
     - Verify Payment: 10 requests/minute per user
     - Webhook: 100 requests/minute per IP
-  - Proper 429 status codes with Retry-After headers
+  - Advanced headers: `Retry-After`, `X-RateLimit-Limit`, `X-RateLimit-Reset`
+  - Built-in analytics for monitoring rate limit hits
 
 ## API Endpoints
 
