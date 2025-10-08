@@ -36,6 +36,7 @@ A modern subscription management platform built with Next.js 15, featuring secur
   - Real-time payment status updates
   - Payment history with invoice generation
   - PDF invoice downloads for completed transactions
+  - Advanced rate limiting protection for payment endpoints
 
 - **Dashboard & UI**
   - Modern, responsive dashboard with Framer Motion animations
@@ -74,6 +75,7 @@ A modern subscription management platform built with Next.js 15, featuring secur
 - **UI Components**: Shadcn/ui, Lucide React icons
 - **Styling**: Tailwind CSS with custom theme support
 - **Notifications**: Sonner for toast notifications
+- **Rate Limiting**: rate-limiter-flexible for API protection
 
 ## Project Structure
 
@@ -106,6 +108,9 @@ src/
 │   ├── theme/                      # Theme toggle components
 │   └── ui/                         # Reusable UI components
 └── lib/                           # Utility functions and configurations
+    ├── mongodb.ts                  # MongoDB client configuration
+    ├── razorpay.ts                 # Razorpay client setup
+    └── rate-limit.ts               # Rate limiting configuration
 ```
 
 ## Setup Instructions
@@ -188,6 +193,14 @@ src/
 - Payment signature verification
 - Environment variable protection for sensitive data
 - Secure API route implementations
+- Advanced rate limiting with `rate-limiter-flexible`
+  - User-based rate limiting for authenticated endpoints
+  - IP-based rate limiting for public endpoints
+  - Configurable limits per endpoint:
+    - Create Order: 5 requests/minute per user
+    - Verify Payment: 10 requests/minute per user
+    - Webhook: 100 requests/minute per IP
+  - Proper 429 status codes with Retry-After headers
 
 ## API Endpoints
 
@@ -195,11 +208,11 @@ src/
 - `/api/auth/*` - NextAuth endpoints (sign in, sign out, session)
 
 ### Payments
-- `POST /api/payments/create-order` - Create Razorpay order
-- `POST /api/payments/verify-payment` - Verify and process payment
+- `POST /api/payments/create-order` - Create Razorpay order (Rate limited: 5 req/min per user)
+- `POST /api/payments/verify-payment` - Verify and process payment (Rate limited: 10 req/min per user)
 - `GET /api/payments/history` - Get user payment history
 - `POST /api/payments/invoice` - Generate and download PDF invoice
-- `POST /api/payments/webhook` - Handle Razorpay webhooks
+- `POST /api/payments/webhook` - Handle Razorpay webhooks (Rate limited: 100 req/min per IP)
 
 ### User Management
 - `POST /api/user/update-profile` - Update user profile information

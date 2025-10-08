@@ -17,7 +17,8 @@ const webhookLimiter = new RateLimiterMemory({
   duration: 60, // Per 60 seconds
 });
 
-export async function rateLimitByIP(
+// Rate limit by identifier (user ID or IP)
+export async function rateLimit(
   identifier: string,
   limiter: RateLimiterMemory
 ) {

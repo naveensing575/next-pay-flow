@@ -3,21 +3,20 @@ import { razorpay } from "@/lib/razorpay";
 import clientPromise from "@/lib/mongodb";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { rateLimitByIP, createOrderLimiter } from "@/lib/rate-limit";
+import { rateLimit, createOrderLimiter } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   try {
-    // Rate limiting by IP
-    const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
-    const rateLimitResponse = await rateLimitByIP(ip, createOrderLimiter);
-    if (rateLimitResponse) {
-      return rateLimitResponse;
-    }
-
-    // Verify user is authenticated
+    // Verify user is authenticated first
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Rate limiting by user ID (better than IP for authenticated endpoints)
+    const rateLimitResponse = await rateLimit(session.user.id, createOrderLimiter);
+    if (rateLimitResponse) {
+      return rateLimitResponse;
     }
 
     const { planId } = await req.json();

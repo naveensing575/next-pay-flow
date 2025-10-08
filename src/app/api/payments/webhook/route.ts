@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import clientPromise from "@/lib/mongodb";
-import { rateLimitByIP, webhookLimiter } from "@/lib/rate-limit";
+import { rateLimit, webhookLimiter } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate limiting by IP for webhooks (since they're not user-authenticated)
     const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
-    const rateLimitResponse = await rateLimitByIP(ip, webhookLimiter);
+    const rateLimitResponse = await rateLimit(ip, webhookLimiter);
     if (rateLimitResponse) {
       return rateLimitResponse;
     }
