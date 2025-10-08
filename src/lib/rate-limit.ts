@@ -1,31 +1,30 @@
 import { RateLimiterMemory } from "rate-limiter-flexible";
 import { NextResponse } from "next/server";
 
-// Create rate limiters for different endpoints
 const createOrderLimiter = new RateLimiterMemory({
-  points: 5, // Number of requests
-  duration: 60, // Per 60 seconds (1 minute)
+  points: 5, //number of requests
+  duration: 60, //time in seconds
 });
 
 const verifyPaymentLimiter = new RateLimiterMemory({
-  points: 10, // Number of requests
-  duration: 60, // Per 60 seconds
+  points: 10,
+  duration: 60,
 });
 
 const webhookLimiter = new RateLimiterMemory({
-  points: 100, // Higher limit for webhooks from Razorpay
-  duration: 60, // Per 60 seconds
+  points: 100,
+  duration: 60,
 });
 
-// Rate limit by identifier (user ID or IP)
 export async function rateLimit(
   identifier: string,
   limiter: RateLimiterMemory
-) {
+): Promise<NextResponse | null> {
   try {
     await limiter.consume(identifier);
     return null;
   } catch (error) {
+    console.error(error)
     return NextResponse.json(
       { error: "Too many requests. Please try again later." },
       {
