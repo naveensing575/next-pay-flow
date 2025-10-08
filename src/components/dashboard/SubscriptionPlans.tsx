@@ -15,9 +15,10 @@ interface Plan {
 
 interface SubscriptionPlansProps {
   onUpgrade: (planId: string) => Promise<void> | void
+  currentPlan?: string
 }
 
-const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({ onUpgrade }) => {
+const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({ onUpgrade, currentPlan = "free" }) => {
   const [selectedPlan, setSelectedPlan] = useState<string>("professional")
   const [isLoading, setIsLoading] = useState<boolean>(false)
 
@@ -44,6 +45,9 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({ onUpgrade }) => {
   ]
 
   const handleUpgrade = async () => {
+    if (currentPlan === selectedPlan) {
+      return
+    }
     setIsLoading(true)
     try {
       await onUpgrade(selectedPlan)
@@ -68,22 +72,38 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({ onUpgrade }) => {
       <motion.div layout className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {plans.map((plan) => {
           const isSelected = selectedPlan === plan.id
+          const isCurrentPlan = currentPlan === plan.id
           return (
             <motion.div
               key={plan.id}
               layoutId={plan.id}
-              onClick={() => setSelectedPlan(plan.id)}
-              className={`relative flex flex-col justify-between p-6 md:p-8 rounded-2xl border cursor-pointer transition-all h-full ${isSelected
-                  ? "border-indigo-500 shadow-xl"
-                  : "border-border hover:border-indigo-400/60"
-                } ${plan.popular ? "ring-1 ring-indigo-300/40" : ""}`}
-              whileHover={{ y: -4 }}
+              onClick={() => !isCurrentPlan && setSelectedPlan(plan.id)}
+              className={`relative flex flex-col justify-between p-6 md:p-8 rounded-2xl border transition-all h-full ${
+                isCurrentPlan
+                  ? "border-green-500 bg-green-50 dark:bg-green-950/20 cursor-not-allowed"
+                  : isSelected
+                  ? "border-indigo-500 shadow-xl cursor-pointer"
+                  : "border-border hover:border-indigo-400/60 cursor-pointer"
+                } ${plan.popular && !isCurrentPlan ? "ring-1 ring-indigo-300/40" : ""}`}
+              whileHover={!isCurrentPlan ? { y: -4 } : {}}
               animate={{
-                scale: isSelected ? 1.05 : 1,
+                scale: isSelected && !isCurrentPlan ? 1.05 : 1,
               }}
               transition={{ type: "spring", stiffness: 200, damping: 20 }}
             >
-              {plan.popular && (
+              {isCurrentPlan && (
+                <motion.div
+                  className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <span className="bg-green-600 text-white text-xs px-3 py-1 rounded-full">
+                    Current Plan
+                  </span>
+                </motion.div>
+              )}
+              {plan.popular && !isCurrentPlan && (
                 <motion.div
                   className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2"
                   initial={{ scale: 0 }}
@@ -119,12 +139,16 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({ onUpgrade }) => {
               </div>
 
               <Button
-                className={`w-full ${isSelected
+                disabled={isCurrentPlan}
+                className={`w-full ${
+                  isCurrentPlan
+                    ? "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200 border border-green-500 cursor-not-allowed"
+                    : isSelected
                     ? "bg-indigo-600 text-white border border-indigo-600 hover:bg-indigo-700 hover:text-white"
                     : "bg-transparent text-foreground border border-foreground hover:bg-indigo-600 hover:text-white"
                   }`}
               >
-                {isSelected ? "Selected" : "Choose plan"}
+                {isCurrentPlan ? "Current Plan" : isSelected ? "Selected" : "Choose plan"}
               </Button>
             </motion.div>
           )

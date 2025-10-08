@@ -35,6 +35,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
     }
 
+    // Check if user already has this plan
+    const currentPlan = session.user.plan || "free";
+    if (currentPlan === planId) {
+      return NextResponse.json(
+        { error: `You already have the ${planId} plan` },
+        { status: 400 }
+      );
+    }
+
     // Create Razorpay order
     const options = {
       amount: plans[planId] * 100, // Convert rupees to paise
