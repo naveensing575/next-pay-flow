@@ -101,8 +101,7 @@ src/
 │   └── not-found.tsx               # 404 page
 ├── components/
 │   ├── auth/                       # Authentication components
-│   ├── dashboard/                  # Dashboard UI components
-│   ├── pricing/                    # Plan comparison table
+│   ├── dashboard/                  # Dashboard comparison table
 │   ├── providers/                  # React providers
 │   ├── theme/                      # Theme toggle components
 │   └── ui/                         # Reusable UI components

@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import clientPromise from "@/lib/mongodb";
+import { rateLimitByIP, webhookLimiter } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
+    const rateLimitResponse = await rateLimitByIP(ip, webhookLimiter);
+    if (rateLimitResponse) {
+      return rateLimitResponse;
+    }
+
     const body = await req.text();
     const signature = req.headers.get("x-razorpay-signature") as string;
 

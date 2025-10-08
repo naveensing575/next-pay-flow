@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, ArrowRight, Shield, Zap, BarChart3, Loader2 } from 'lucide-react';
 import GoogleOneTap from './auth/GoogleOneTap';
-import PlanComparison from './pricing/PlanComparison';
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -184,13 +183,6 @@ export default function LandingPage() {
           animate={{ scale: [1, 0.8, 1], rotate: [0, -180, -360] }}
           transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
         />
-      </div>
-    </div>
-
-    {/* Plan Comparison Section */}
-    <div className="w-full bg-white dark:bg-gray-950 px-4 py-16 md:py-24">
-      <div className="max-w-7xl mx-auto">
-        <PlanComparison />
       </div>
     </div>
     </>
