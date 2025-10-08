@@ -186,7 +186,7 @@ export default function Dashboard() {
 
         <Card className="border-blue-200 shadow-lg">
           <CardContent className="p-6">
-            <SubscriptionPlans onUpgrade={handleUpgrade} />
+            <SubscriptionPlans onUpgrade={handleUpgrade} currentPlan={userPlan} />
           </CardContent>
         </Card>
       </div>

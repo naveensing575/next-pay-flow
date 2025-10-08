@@ -174,11 +174,13 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({ onUpgrade, curren
         </div>
         <Button
           onClick={handleUpgrade}
-          disabled={isLoading}
-          className="bg-indigo-600 text-white hover:bg-indigo-700 hover:text-white min-w-[160px]"
+          disabled={isLoading || currentPlan === selectedPlan}
+          className="bg-indigo-600 text-white hover:bg-indigo-700 hover:text-white min-w-[160px] disabled:opacity-50 disabled:cursor-not-allowed"
           size="lg"
         >
-          {isLoading ? (
+          {currentPlan === selectedPlan ? (
+            "Already on this plan"
+          ) : isLoading ? (
             <motion.div
               className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
               animate={{ rotate: 360 }}
